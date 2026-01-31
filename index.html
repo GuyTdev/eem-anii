@@ -3,75 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eem Anii - Maccabi 2026 PRO</title>
+    <title>Eem Anii - Maccabi 2026 Final</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <style>
+        :root { --maccabi-yellow: #fde047; --maccabi-blue: #1e3a8a; }
+        body { background-color: #020617; margin: 0; font-family: sans-serif; }
         .app-container { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-        .pitch-gradient { background: linear-gradient(to bottom, #15803d 0%, #166534 100%); position: relative; flex-grow: 1; }
-        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.4; }
+        .pitch-gradient { background: linear-gradient(135deg, #15803d 0%, #166534 100%); position: relative; flex-grow: 1; border: 2px solid rgba(255,255,255,0.1); }
+        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.3; }
         .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: white; transform: translateY(-50%); }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); }
-        .box-top { position: absolute; top: 0; left: 50%; width: 200px; height: 70px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
-        .box-bot { position: absolute; bottom: 0; left: 50%; width: 200px; height: 70px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
+        .box-top { position: absolute; top: 0; left: 50%; width: 180px; height: 60px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
+        .box-bot { position: absolute; bottom: 0; left: 50%; width: 180px; height: 60px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
         
         .bench-scroll { 
-            display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 10px;
-            scrollbar-width: thin; scrollbar-color: #eab308 #1e293b;
+            display: flex; gap: 1rem; overflow-x: auto; padding: 10px;
+            scrollbar-width: none; -ms-overflow-style: none;
         }
-        .bench-scroll::-webkit-scrollbar { height: 6px; }
-        .bench-scroll::-webkit-scrollbar-thumb { background-color: #eab308; border-radius: 10px; }
-
-        .player-node { touch-action: none; z-index: 20; }
-        @keyframes bounce-in { 0% { transform: translate(-50%, -50%) scale(0.8); } 70% { transform: translate(-50%, -50%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(1); } }
-        .animate-bounce-in { animation: bounce-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bench-scroll::-webkit-scrollbar { display: none; }
+        
+        .player-node { touch-action: none; z-index: 20; transition: transform 0.1s ease; }
+        .floating-tooltip {
+            position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); color: #0f172a;
+            padding: 8px; border-radius: 10px; width: 120px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4); z-index: 100;
+            border: 2px solid var(--maccabi-yellow); pointer-events: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans overflow-hidden select-none">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
-        const FULL_SQUAD = [
-            // Starting 11 (Default: 4-2-1-3)
-            { id: 22, name: "Melika", n: 22, p: "GK", g: 0, mp: 15, s: "Reflexes", status: "fit" },
-            { id: 6, name: "Asante", n: 6, p: "RB", g: 1, mp: 18, s: "Pace", status: "fit" }, // Set to RB
-            { id: 4, name: "Heitor", n: 4, p: "CB", g: 1, mp: 14, s: "Strength", status: "fit" }, // Set to CB
-            { id: 13, name: "Shlomo", n: 13, p: "CB", g: 0, mp: 16, s: "Aerials", status: "fit" },
-            { id: 3, name: "Revivo", n: 3, p: "LB", g: 1, mp: 19, s: "Crossing", status: "fit" },
-            { id: 28, name: "Sissokho", n: 28, p: "CDM", g: 0, mp: 17, s: "Interceptions", status: "fit" },
-            { id: 42, name: "Peretz", n: 42, p: "CDM", g: 12, mp: 20, s: "Power", status: "fit" },
-            { id: 30, name: "Itamar Noy", n: 30, p: "CAM", g: 3, mp: 19, s: "Vision", status: "fit" },
-            { id: 11, name: "Jehezkel", n: 11, p: "RW", g: 5, mp: 19, s: "Speed", status: "fit" },
-            { id: 29, name: "Varela", n: 29, p: "LW", g: 4, mp: 16, s: "Dribbling", status: "fit" },
-            { id: 34, name: "Abu Farchi", n: 34, p: "ST", g: 3, mp: 18, s: "Finishing", status: "fit" },
+        const LATEST_SQUAD = [
+            // Starting 11 (4-2-1-3)
+            { id: 22, name: "Melika", n: 22, p: "GK", g: 0, a: 0, s: "Reflexes", status: "fit" },
+            { id: 6, name: "Asante", n: 6, p: "RB", g: 1, a: 3, s: "Pace", status: "fit" },
+            { id: 4, name: "Heitor", n: 4, p: "CB", g: 1, a: 1, s: "Strength", status: "fit" },
+            { id: 13, name: "Shlomo", n: 13, p: "CB", g: 0, a: 0, s: "Aerials", status: "fit" },
+            { id: 3, name: "Revivo", n: 3, p: "LB", g: 1, a: 6, s: "Crosses", status: "fit" },
+            { id: 28, name: "Sissokho", n: 28, p: "CDM", g: 0, a: 2, s: "Tackling", status: "fit" },
+            { id: 17, name: "Belic", n: 17, p: "CDM", g: 0, a: 1, s: "Physical", status: "fit" },
+            { id: 42, name: "Peretz", n: 42, p: "CAM", g: 14, a: 7, s: "Finishing", status: "fit" },
+            { id: 11, name: "Jehezkel", n: 11, p: "RW", g: 6, a: 8, s: "Dribbling", status: "fit" },
+            { id: 47, name: "Sahiti", n: 47, p: "LW", g: 0, a: 0, s: "Flair", status: "fit" }, // אמיר סהיטי
+            { id: 34, name: "Abu Farchi", n: 34, p: "ST", g: 4, a: 1, s: "Speed", status: "fit" },
             
             // Bench
             { id: 90, name: "Mishpati", n: 90, p: "GK", status: "fit" },
+            { id: 30, name: "Itamar Noy", n: 30, p: "CAM", status: "fit" },
             { id: 41, name: "Ben Hamo", n: 41, p: "CB", status: "fit" },
             { id: 36, name: "Shahar", n: 36, p: "CM", status: "fit" },
             { id: 10, name: "Andrade", n: 10, p: "CAM", status: "fit" },
-            { id: 21, name: "Ben Harush", n: 21, p: "RB", status: "fit" },
-            { id: 23, name: "Lederman", n: 23, p: "CDM", status: "fit" },
             { id: 19, name: "Madmon", n: 19, p: "ST", status: "fit" },
-            { id: 15, name: "Malede", n: 15, p: "ST", status: "fit" },
+            { id: 29, name: "Varela", n: 29, p: "LW", status: "fit" },
             { id: 77, name: "Davida", n: 77, p: "RW", status: "doubtful" },
-            { id: 5, name: "Camara", n: 5, p: "CB", status: "injured", reason: "Calf" },
-            { id: 14, name: "Gropper", n: 14, p: "LB", status: "injured", reason: "ACL" },
-            { id: 98, name: "Nicolaescu", n: 98, p: "ST", status: "injured", reason: "ACL" }
+            { id: 5, name: "Camara", n: 5, p: "CB", status: "injured", reason: "Ribs" },
+            { id: 98, name: "Nicolaescu", n: 98, p: "ST", status: "injured", reason: "ACL - Frozen" }
         ];
 
         const FORMATIONS = {
             "4-2-1-3": [{t:88,l:50},{t:72,l:85},{t:75,l:63},{t:75,l:37},{t:72,l:15},{t:55,l:68},{t:55,l:32},{t:35,l:50},{t:20,l:85},{t:20,l:15},{t:12,l:50}],
             "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:42,l:70},{t:42,l:30},{t:20,l:82},{t:20,l:18},{t:12,l:50}],
             "4-2-3-1": [{t:88,l:50},{t:72,l:85},{t:75,l:63},{t:75,l:37},{t:72,l:15},{t:55,l:65},{t:55,l:35},{t:30,l:82},{t:25,l:50},{t:30,l:18},{t:12,l:50}],
-            "4-4-2": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:50,l:85},{t:52,l:60},{t:52,l:40},{t:50,l:15},{t:18,l:60},{t:18,l:40}],
-            "3-5-2": [{t:88,l:50},{t:75,l:50},{t:75,l:75},{t:75,l:25},{t:45,l:10},{t:50,l:35},{t:55,l:50},{t:50,l:65},{t:45,l:90},{t:18,l:40},{t:18,l:60}],
-            "5-4-1": [{t:88,l:50},{t:75,l:10},{t:78,l:30},{t:80,l:50},{t:78,l:70},{t:75,l:90},{t:52,l:20},{t:55,l:40},{t:55,l:60},{t:52,l:80},{t:22,l:50}],
             "Custom": null
         };
 
@@ -82,16 +85,18 @@
             const [captain, setCaptain] = useState(42);
             const [dragInfo, setDragInfo] = useState(null);
             const [tooltip, setTooltip] = useState(null);
+            const [syncing, setSyncing] = useState(false);
             const pitchRef = useRef(null);
 
-            useEffect(() => { 
-                resetToDefault();
-            }, []);
+            useEffect(() => { syncData(); }, []);
 
-            const resetToDefault = () => {
-                setFormation("4-2-1-3");
-                setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({ ...p, top: FORMATIONS["4-2-1-3"][i].t, left: FORMATIONS["4-2-1-3"][i].l })));
-                setBench(FULL_SQUAD.slice(11));
+            const syncData = () => {
+                setSyncing(true);
+                setTimeout(() => {
+                    setPlayers(LATEST_SQUAD.slice(0, 11).map((p, i) => ({ ...p, top: FORMATIONS["4-2-1-3"][i].t, left: FORMATIONS["4-2-1-3"][i].l })));
+                    setBench(LATEST_SQUAD.slice(11));
+                    setSyncing(false);
+                }, 800);
             };
 
             const startDrag = (e, idx, src) => {
@@ -131,67 +136,62 @@
             };
 
             return (
-                <div className="app-container max-w-md mx-auto bg-slate-900 shadow-2xl relative">
-                    <header className="px-4 py-3 bg-yellow-500 text-blue-900 flex justify-between items-center z-50">
+                <div className="app-container max-w-md mx-auto bg-slate-950 relative" onClick={() => setTooltip(null)}>
+                    <header className="px-4 py-4 bg-yellow-500 text-blue-900 flex justify-between items-center z-50 shadow-lg">
                         <div>
-                            <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">EEM ANII</h1>
-                            <p className="text-[8px] font-bold opacity-80 uppercase mt-0.5">365Scores Live • Jan 31, 2026</p>
+                            <h1 className="text-2xl font-black italic tracking-tighter">EEM ANII</h1>
+                            <p className="text-[9px] font-bold opacity-80 uppercase">Feb 1, 2026 • Live Sync</p>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={resetToDefault} className="bg-blue-900/10 p-2 rounded-full"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
-                            <button className="bg-blue-900 text-white p-2 rounded-full"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg></button>
+                            <button onClick={(e) => { e.stopPropagation(); syncData(); }} className={`p-2 bg-blue-900/10 rounded-full transition ${syncing ? 'animate-spin' : ''}`}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                            </button>
+                            <button className="bg-blue-900 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase">Export</button>
                         </div>
                     </header>
 
-                    <div className="flex bg-slate-800 p-2 gap-2 overflow-x-auto scrollbar-hide shrink-0">
-                        {Object.keys(FORMATIONS).map(f => (
-                            <button key={f} onClick={() => { if(f && f!=='Custom') { setFormation(f); setPlayers(prev => prev.map((p,i) => ({...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l}))); }}} 
-                            className={`px-4 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors ${formation === f ? 'bg-yellow-500 text-blue-900' : 'bg-slate-700 text-slate-400'}`}>{f}</button>
+                    <div className="flex bg-slate-900 p-2 gap-2 overflow-x-auto scrollbar-hide shrink-0">
+                        {Object.keys(FORMATIONS).map(f => f && (
+                            <button key={f} onClick={() => { if(f!=='Custom') { setFormation(f); setPlayers(prev => prev.map((p,i) => ({...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l}))); }}} 
+                            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition ${formation === f ? 'bg-yellow-500 text-blue-900' : 'bg-slate-800 text-slate-500'}`}>{f}</button>
                         ))}
                     </div>
 
-                    <div ref={pitchRef} onDragOver={e => e.preventDefault()} onDrop={handleMoveOnPitch} className="pitch-gradient m-2 rounded-xl overflow-hidden border-2 border-white/20">
+                    <div ref={pitchRef} onDragOver={e => e.preventDefault()} onDrop={handleMoveOnPitch} className="pitch-gradient m-2 rounded-2xl overflow-hidden shadow-2xl">
                         <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/><div className="box-top"/><div className="box-bot"/></div>
                         
                         {players.map((p, i) => (
                             <div key={p.id} draggable onDragStart={(e) => startDrag(e, i, 'field')} onDrop={(e) => handleDrop(e, i, 'field')} onDragOver={e => e.preventDefault()}
-                                 onDoubleClick={() => setCaptain(p.id)} onClick={() => { setTooltip(p); setTimeout(() => setTooltip(null), 1800); }}
-                                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node group animate-bounce-in" style={{ top: `${p.top}%`, left: `${p.left}%` }}>
-                                <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center font-black text-xs shadow-lg transition-transform group-active:scale-125 ${p.p === 'GK' ? 'bg-orange-600 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                                 onDoubleClick={(e) => { e.stopPropagation(); setCaptain(p.id); }} onClick={(e) => { e.stopPropagation(); setTooltip(p); }}
+                                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node" style={{ top: `${p.top}%`, left: `${p.left}%` }}>
+                                
+                                {tooltip?.id === p.id && (
+                                    <div className="floating-tooltip">
+                                        <p className="text-[10px] font-black border-b pb-1 mb-1 uppercase truncate">{p.name}</p>
+                                        <div className="flex justify-between text-[9px] font-bold text-slate-500"><span>Goals:</span><span>{p.g || 0}</span></div>
+                                        <p className="text-[8px] mt-1 text-blue-600 font-black uppercase italic">⚡ {p.s}</p>
+                                    </div>
+                                )}
+
+                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-black text-sm shadow-xl transition-all active:scale-125 ${p.p === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
                                     {p.n}
                                     {captain === p.id && <div className="absolute -top-1 -right-1 bg-white text-blue-900 w-4 h-4 rounded-full flex items-center justify-center border border-blue-900 text-[8px] font-black">C</div>}
-                                    {p.status !== 'fit' && <div className="absolute -bottom-1 -right-1 bg-red-600 text-white w-4 h-4 rounded-full flex items-center justify-center border border-white text-[10px]">✚</div>}
                                 </div>
-                                <div className="mt-1 bg-blue-950/80 px-2 py-0.5 rounded text-[8px] font-bold text-white uppercase whitespace-nowrap border border-white/10">{p.name}</div>
+                                <div className="mt-1 bg-blue-900/90 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase whitespace-nowrap shadow-md">{p.name}</div>
                             </div>
                         ))}
-
-                        {tooltip && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-blue-900 px-5 py-3 rounded-2xl shadow-2xl z-50 border-2 border-yellow-500 text-center animate-bounce-in">
-                                <p className="text-xs font-black uppercase tracking-widest border-b pb-1 mb-1">{tooltip.name}</p>
-                                <div className="flex gap-4 justify-center text-[10px] font-bold text-slate-500 mb-1">
-                                    <span>Goals: {tooltip.g || 0}</span>
-                                    <span>Assists: {tooltip.a || 0}</span>
-                                </div>
-                                <p className="text-[9px] font-black text-blue-600 uppercase italic">⚡ {tooltip.s || "Versatile"}</p>
-                                {tooltip.status !== 'fit' && <p className="text-[8px] font-bold text-red-600 mt-1 uppercase">🚑 {tooltip.reason}</p>}
-                            </div>
-                        )}
                     </div>
 
-                    <div className="bg-slate-800 p-4 shrink-0 pb-10">
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase mb-3 tracking-widest">Bench Intel (Scroll Right →)</h3>
+                    <div className="bg-slate-900 p-4 shrink-0 pb-10">
+                        <h3 className="text-[10px] font-black text-slate-600 uppercase mb-3 tracking-widest">Bench Scouting</h3>
                         <div className="bench-scroll">
                             {bench.map((p, i) => (
                                 <div key={p.id} draggable onDragStart={(e) => startDrag(e, i, 'bench')} onDrop={(e) => handleDrop(e, i, 'bench')} onDragOver={e => e.preventDefault()}
-                                     onClick={() => { setTooltip(p); setTimeout(() => setTooltip(null), 1800); }}
-                                     className={`flex-shrink-0 flex flex-col items-center transition ${p.status !== 'fit' ? 'opacity-40 grayscale' : 'opacity-80 hover:opacity-100'}`}>
-                                    <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-[10px] font-bold relative">
+                                     className={`flex-shrink-0 flex flex-col items-center transition ${p.status !== 'fit' ? 'opacity-30 grayscale' : 'opacity-80'}`}>
+                                    <div className="w-10 h-10 bg-slate-800 rounded-full border-2 border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400">
                                         {p.n}
-                                        {p.status !== 'fit' && <span className="absolute -top-1 -right-1 text-red-500 text-[10px]">✚</span>}
                                     </div>
-                                    <p className="text-[8px] mt-1 font-bold text-center uppercase truncate w-12">{p.name}</p>
-                                    <p className="text-[7px] text-yellow-500/50 font-black">{p.p}</p>
+                                    <p className="text-[8px] mt-1 font-bold text-center uppercase truncate w-12 text-slate-500">{p.name}</p>
                                 </div>
                             ))}
                         </div>

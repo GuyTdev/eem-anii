@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Eem Anii - Maccabi 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -10,67 +10,53 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <style>
-        .pitch-gradient { background: linear-gradient(to bottom, #15803d 0%, #166534 100%); position: relative; }
-        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.4; }
+        body { background-color: #0f172a; margin: 0; padding: 0; }
+        .pitch-gradient { background: linear-gradient(to bottom, #15803d 0%, #166534 100%); position: relative; min-height: 520px; }
+        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.3; }
         .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: white; transform: translateY(-50%); }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); }
-        .center-dot { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: white; border-radius: 50%; transform: translate(-50%, -50%); }
-        .box-top { position: absolute; top: 0; left: 50%; width: 200px; height: 70px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
-        .goal-top { position: absolute; top: 0; left: 50%; width: 80px; height: 30px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
-        .box-bot { position: absolute; bottom: 0; left: 50%; width: 200px; height: 70px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
-        .goal-bot { position: absolute; bottom: 0; left: 50%; width: 80px; height: 30px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
-        .player-node { touch-action: none; transition: transform 0.1s; z-index: 20; }
+        .box-top { position: absolute; top: 0; left: 50%; width: 180px; height: 60px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
+        .box-bot { position: absolute; bottom: 0; left: 50%; width: 180px; height: 60px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
+        .player-node { touch-action: none; transition: transform 0.1s; z-index: 50; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .status-badge { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid white; }
+        /* Safe space for mobile browsers with bottom navigation bars */
+        .mobile-extra-padding { padding-bottom: 160px; }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans overflow-hidden select-none">
+<body class="text-white font-sans overflow-y-auto select-none">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
-        // FULL SQUAD - JAN 29, 2026 (Based on Derby vs Hapoel TA)
         const SQUAD_DATA = [
-            // STARTING 11 (Derby Lineup - Camara replaced by Ben Hamo due to injury)
-            { id: 22, name: "Melika", n: 22, p: "GK", g: 0, mp: 13, status: "fit" },
-            { id: 4, name: "Heitor", n: 4, p: "CB", g: 1, mp: 14, status: "fit" },
-            { id: 13, name: "Shlomo", n: 13, p: "CB", g: 0, mp: 14, status: "fit" },
-            { id: 41, name: "Ben Hamo", n: 41, p: "CB", g: 0, mp: 9, status: "fit" }, // Replaced Camara
-            { id: 3, name: "Revivo", n: 3, p: "LB", g: 0, mp: 18, status: "fit" },
-            { id: 28, name: "Sissokho", n: 28, p: "CDM", g: 0, mp: 15, status: "fit" },
-            { id: 42, name: "Peretz", n: 42, p: "CM", g: 10, mp: 19, status: "fit" },
-            { id: 30, name: "Itamar Noy", n: 30, p: "CAM", g: 2, mp: 19, status: "fit" },
-            { id: 11, name: "Jehezkel", n: 11, p: "RW", g: 3, mp: 19, status: "fit" },
-            { id: 29, name: "Varela", n: 29, p: "LW", g: 2, mp: 15, status: "fit" },
-            { id: 34, name: "Abu Farchi", n: 34, p: "ST", g: 2, mp: 17, status: "fit" },
-
-            // BENCH (Fit)
-            { id: 90, name: "Mishpati", n: 90, p: "GK", g: 0, mp: 11, status: "fit" },
-            { id: 36, name: "Shahar", n: 36, p: "CM", g: 9, mp: 18, status: "fit" }, // Top scorer bench option
-            { id: 10, name: "Andrade", n: 10, p: "CAM", g: 1, mp: 17, status: "fit" },
-            { id: 21, name: "Ben Harush", n: 21, p: "RB", g: 1, mp: 11, status: "fit" },
-            { id: 23, name: "Lederman", n: 23, p: "CDM", g: 0, mp: 7, status: "fit" },
-            { id: 19, name: "Madmon", n: 19, p: "ST", g: 3, mp: 15, status: "fit" },
-            { id: 15, name: "Malede", n: 15, p: "ST", g: 0, mp: 6, status: "fit" },
-            { id: 60, name: "Ben Simon", n: 60, p: "ST", g: 0, mp: 2, status: "fit" },
-            { id: 51, name: "Saadya", n: 51, p: "GK", g: 0, mp: 0, status: "fit" },
-
-            // INJURED / DOUBTFUL (Cannot Start)
-            { id: 5, name: "Camara", n: 5, p: "CB", g: 1, mp: 15, status: "injured", reason: "Calf" },
-            { id: 6, name: "Asante", n: 6, p: "CB", g: 1, mp: 18, status: "doubtful", reason: "Muscle" },
-            { id: 17, name: "Belic", n: 17, p: "CDM", g: 0, mp: 10, status: "injured", reason: "Cheekbone" },
-            { id: 77, name: "Davida", n: 77, p: "RW", g: 1, mp: 19, status: "doubtful", reason: "Calf" },
-            { id: 14, name: "Gropper", n: 14, p: "LB", g: 0, mp: 2, status: "injured", reason: "ACL" },
-            { id: 98, name: "Nicolaescu", n: 98, p: "ST", g: 2, mp: 10, status: "injured", reason: "ACL" }
+            { id: 22, name: "Melika", n: 22, p: "GK", status: "fit" },
+            { id: 4, name: "Heitor", n: 4, p: "RB", status: "fit" },
+            { id: 13, name: "Shlomo", n: 13, p: "CB", status: "fit" },
+            { id: 41, name: "Ben Hamo", n: 41, p: "CB", status: "fit" },
+            { id: 3, name: "Revivo", n: 3, p: "LB", status: "fit" },
+            { id: 28, name: "Sissokho", n: 28, p: "CDM", status: "fit" },
+            { id: 42, name: "Peretz", n: 42, p: "CM", status: "fit" },
+            { id: 30, name: "Itamar Noy", n: 30, p: "CAM", status: "fit" },
+            { id: 11, name: "Jehezkel", n: 11, p: "RW", status: "fit" },
+            { id: 29, name: "Varela", n: 29, p: "LW", status: "fit" },
+            { id: 34, name: "Abu Farchi", n: 34, p: "ST", status: "fit" },
+            // Bench
+            { id: 90, name: "Mishpati", n: 90, p: "GK", status: "fit" },
+            { id: 36, name: "Shahar", n: 36, p: "CM", status: "fit" },
+            { id: 10, name: "Andrade", n: 10, p: "CAM", status: "fit" },
+            { id: 21, name: "Ben Harush", n: 21, p: "RB", status: "fit" },
+            { id: 5, name: "Camara", n: 5, p: "CB", status: "injured" },
+            { id: 6, name: "Asante", n: 6, p: "CB", status: "doubtful" },
+            { id: 19, name: "Madmon", n: 19, p: "ST", status: "fit" },
+            { id: 77, name: "Davida", n: 77, p: "RW", status: "doubtful" },
+            { id: 98, name: "Nicolaescu", n: 98, p: "ST", status: "injured" }
         ];
 
         const FORMATIONS = {
-            "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:42,l:70},{t:42,l:30},{t:20,l:82},{t:20,l:18},{t:12,l:50}],
             "4-2-3-1": [{t:88,l:50},{t:72,l:85},{t:75,l:63},{t:75,l:37},{t:72,l:15},{t:55,l:65},{t:55,l:35},{t:30,l:82},{t:25,l:50},{t:30,l:18},{t:12,l:50}],
-            "4-4-2": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:50,l:85},{t:52,l:60},{t:52,l:40},{t:50,l:15},{t:18,l:60},{t:18,l:40}],
-            "3-5-2": [{t:88,l:50},{t:75,l:50},{t:75,l:75},{t:75,l:25},{t:45,l:10},{t:50,l:35},{t:55,l:50},{t:50,l:65},{t:45,l:90},{t:18,l:40},{t:18,l:60}],
-            "5-4-1": [{t:88,l:50},{t:75,l:10},{t:78,l:30},{t:80,l:50},{t:78,l:70},{t:75,l:90},{t:52,l:20},{t:55,l:40},{t:55,l:60},{t:52,l:80},{t:22,l:50}],
+            "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:42,l:70},{t:42,l:30},{t:20,l:82},{t:20,l:18},{t:12,l:50}],
+            "4-4-2": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:52,l:85},{t:55,l:60},{t:55,l:40},{t:52,l:15},{t:20,l:62},{t:20,l:38}],
             "Custom": null
         };
 
@@ -78,135 +64,134 @@
             const [formation, setFormation] = useState("4-2-3-1");
             const [players, setPlayers] = useState([]);
             const [bench, setBench] = useState([]);
-            const [captain, setCaptain] = useState(42); // Dor Peretz
-            const [dragInfo, setDragInfo] = useState(null);
-            const [tooltip, setTooltip] = useState(null);
-            const [loading, setLoading] = useState(false);
+            const [captain, setCaptain] = useState(42);
+            const [draggedIdx, setDraggedIdx] = useState(null);
+            const [dragSource, setDragSource] = useState(null);
+            const [coachName, setCoachName] = useState("");
+            const [isExporting, setIsExporting] = useState(false);
             const pitchRef = useRef(null);
 
-            useEffect(() => { resetLineup(); }, []);
-
-            const resetLineup = () => {
-                setFormation("4-2-3-1");
+            useEffect(() => { 
                 setPlayers(SQUAD_DATA.slice(0, 11).map((p, i) => ({ ...p, top: FORMATIONS["4-2-3-1"][i].t, left: FORMATIONS["4-2-3-1"][i].l })));
                 setBench(SQUAD_DATA.slice(11));
-            };
+            }, []);
 
-            const captureAndShare = async () => {
-                setLoading(true);
-                if (!pitchRef.current) return;
-                try {
-                    const dataUrl = await htmlToImage.toPng(pitchRef.current, { quality: 0.95, backgroundColor: '#0f172a' });
-                    if (navigator.share) {
+            const handleShare = async () => {
+                setIsExporting(true);
+                setTimeout(async () => {
+                    try {
+                        const dataUrl = await htmlToImage.toPng(pitchRef.current, { backgroundColor: '#0f172a' });
                         const blob = await (await fetch(dataUrl)).blob();
                         const file = new File([blob], "maccabi-lineup.png", { type: "image/png" });
-                        if (navigator.canShare({ files: [file] })) {
-                            await navigator.share({ title: 'My Maccabi Lineup', text: 'Check out my Maccabi Tel Aviv squad!', files: [file] });
-                            setLoading(false);
-                            return;
+                        if (navigator.share && navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: 'Maccabi Lineup' });
+                        } else {
+                            const link = document.createElement('a');
+                            link.download = `tactics-${coachName || 'eem-anii'}.png`;
+                            link.href = dataUrl;
+                            link.click();
                         }
-                    }
-                    const link = document.createElement('a'); link.download = 'maccabi-lineup.png'; link.href = dataUrl; link.click();
-                } catch (err) { alert("Sharing failed. Try screenshot."); }
-                setLoading(false);
+                    } catch (e) { alert("Sharing failed."); }
+                    setIsExporting(false);
+                }, 150);
             };
 
-            const handleSwap = (e, idx, src, targetIdx, targetSrc) => {
-                e.stopPropagation();
-                let newP = [...players];
-                let newB = [...bench];
-
-                // Logic: Allow swap even if injured (user override), but visually warn?
-                // Actually, let's allow it but the badge stays.
-                
-                if (src === 'bench' && targetSrc === 'field') {
-                    const out = newP[targetIdx];
-                    newP[targetIdx] = { ...newB[idx], top: out.top, left: out.left };
-                    newB[idx] = out;
-                } else if (src === 'field' && targetSrc === 'bench') {
-                    const outField = newP[idx];
-                    newP[idx] = { ...newB[targetIdx], top: outField.top, left: outField.left };
-                    newB[targetIdx] = outField;
-                } else if (src === 'field' && targetSrc === 'field') {
-                    const tmp = { t: newP[idx].top, l: newP[idx].left };
-                    newP[idx].top = newP[targetIdx].top;
-                    newP[idx].left = newP[targetIdx].left;
-                    newP[targetIdx].top = tmp.t;
-                    newP[targetIdx].left = tmp.l;
-                }
-                setPlayers(newP);
-                setBench(newB);
-                setDragInfo(null);
-            };
-
-            const handleFieldMove = (e) => {
+            const onFieldDrop = (e) => {
                 e.preventDefault();
-                if (!dragInfo || dragInfo.src !== 'field') return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
-                const y = Math.max(5, Math.min(95, ((e.clientY - rect.top) / rect.height) * 100));
-                let newP = [...players];
-                newP[dragInfo.idx].top = y; newP[dragInfo.idx].left = x;
-                setPlayers(newP);
-                setFormation("Custom");
-                setDragInfo(null);
+                const rect = pitchRef.current.getBoundingClientRect();
+                const dropX = ((e.clientX - rect.left) / rect.width) * 100;
+                const dropY = ((e.clientY - rect.top) / rect.height) * 100;
+
+                // Check if dropped near another player (Threshold 6%)
+                const nearPlayerIdx = players.findIndex((p, idx) => 
+                    idx !== draggedIdx && Math.abs(p.left - dropX) < 7 && Math.abs(p.top - dropY) < 7
+                );
+
+                let newPlayers = [...players];
+                let newBench = [...bench];
+
+                if (dragSource === 'field') {
+                    if (nearPlayerIdx !== -1) {
+                        // SWAP positions
+                        const tmpPos = { t: players[draggedIdx].top, l: players[draggedIdx].left };
+                        newPlayers[draggedIdx].top = players[nearPlayerIdx].top;
+                        newPlayers[draggedIdx].left = players[nearPlayerIdx].left;
+                        newPlayers[nearPlayerIdx].top = tmpPos.t;
+                        newPlayers[nearPlayerIdx].left = tmpPos.l;
+                    } else {
+                        // MICRO-MOVE
+                        newPlayers[draggedIdx].top = dropY;
+                        newPlayers[draggedIdx].left = dropX;
+                        setFormation("Custom");
+                    }
+                } else if (dragSource === 'bench') {
+                    // Replace existing player if dropped on them, otherwise replace GK if dropped near top
+                    const targetIdx = nearPlayerIdx !== -1 ? nearPlayerIdx : 0; 
+                    const oldFieldPlayer = newPlayers[targetIdx];
+                    newPlayers[targetIdx] = { ...newBench[draggedIdx], top: oldFieldPlayer.top, left: oldFieldPlayer.left };
+                    newBench[draggedIdx] = oldFieldPlayer;
+                }
+
+                setPlayers(newPlayers);
+                setBench(newBench);
+                setDraggedIdx(null);
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-900 shadow-2xl relative select-none">
-                    <header className="px-4 py-3 bg-yellow-500 text-blue-900 flex justify-between items-center z-50 shadow-md">
-                        <div>
-                            <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">EEM ANII</h1>
-                            <p className="text-[9px] font-bold uppercase mt-0.5 opacity-80">Jan 29, 2026 Edition</p>
+                <div className="min-h-screen flex flex-col max-w-md mx-auto shadow-2xl relative">
+                    <header className="px-4 py-3 bg-yellow-500 text-blue-900 sticky top-0 z-[100] shadow-xl">
+                        <div className="flex justify-between items-center mb-2">
+                            <h1 className="text-xl font-black italic tracking-tighter">EEM ANII</h1>
+                            <button onClick={handleShare} disabled={isExporting} className="bg-blue-900 text-white px-5 py-2 rounded-full text-xs font-black uppercase active:scale-95 transition">
+                                {isExporting ? '...' : 'EXPORT'}
+                            </button>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={resetLineup} className="bg-blue-900/10 hover:bg-blue-900/20 text-blue-900 p-2 rounded-full transition"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
-                            <button onClick={captureAndShare} disabled={loading} className="bg-blue-900 text-white p-2 rounded-full shadow-lg active:scale-95 transition">{loading ? <span className="animate-spin block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span> : <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>}</button>
-                        </div>
+                        <input type="text" placeholder="COACH NAME" value={coachName} onChange={(e)=>setCoachName(e.target.value)} 
+                        className="w-full bg-blue-950/20 border-0 rounded-lg px-3 py-2 text-xs font-bold placeholder:text-blue-900/40 focus:bg-white/20 outline-none transition" />
                     </header>
 
-                    <div className="flex bg-slate-800 p-2 gap-2 border-b border-white/5 overflow-x-auto scrollbar-hide">
+                    <div className="flex bg-slate-800 p-2 gap-2 overflow-x-auto scrollbar-hide">
                         {Object.keys(FORMATIONS).map(f => (
-                            <button key={f} onClick={() => { setFormation(f); if(f!=='Custom') setPlayers(prev => prev.map((p, i) => ({...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l}))); }} className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition whitespace-nowrap flex-shrink-0 ${formation === f ? 'bg-yellow-500 text-blue-900' : 'bg-slate-700 text-slate-400'}`}>{f}</button>
+                            <button key={f} onClick={() => { if(f!=='Custom') { setFormation(f); setPlayers(prev => prev.map((p,i) => ({...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l}))); }}} 
+                            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${formation === f ? 'bg-yellow-500 text-blue-900' : 'bg-slate-700 text-slate-400'}`}>{f}</button>
                         ))}
                     </div>
 
-                    <div ref={pitchRef} id="pitch-capture" onDragOver={e => e.preventDefault()} onDrop={handleFieldMove} className="flex-grow m-2 pitch-gradient rounded-xl overflow-hidden shadow-2xl relative border-2 border-white/20">
-                        <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/><div className="center-dot"/><div className="box-top"/><div className="goal-top"/><div className="box-bot"/><div className="goal-bot"/></div>
-
-                        {players.map((p, i) => (
-                            <div key={p.id} draggable onDragStart={() => setDragInfo({idx: i, src: 'field'})} onDrop={(e) => handleSwap(e, dragInfo.idx, dragInfo.src, i, 'field')} onDragOver={e => e.preventDefault()} onDoubleClick={() => setCaptain(p.id)} onClick={() => { setTooltip(p); setTimeout(() => setTooltip(null), 1500); }}
-                                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node cursor-grab active:cursor-grabbing" style={{ top: `${p.top}%`, left: `${p.left}%` }}>
-                                <div className={`relative w-11 h-11 rounded-full border-2 flex items-center justify-center font-black text-xs shadow-lg transition-transform hover:scale-105 ${p.p === 'GK' ? 'bg-orange-600 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
-                                    {p.n}
-                                    {captain === p.id && <div className="absolute -top-1 -right-1 bg-white text-blue-900 w-4 h-4 rounded-full flex items-center justify-center border border-blue-900 capt-badge"><span className="text-[8px] font-black">C</span></div>}
-                                    {p.status === 'injured' && <div className="absolute -bottom-1 -right-1 bg-red-600 text-white w-4 h-4 rounded-full flex items-center justify-center border border-white status-badge">✚</div>}
-                                    {p.status === 'doubtful' && <div className="absolute -bottom-1 -right-1 bg-orange-500 text-white w-4 h-4 rounded-full flex items-center justify-center border border-white status-badge">?</div>}
-                                </div>
-                                <div className="mt-1 bg-blue-950/80 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter text-white border border-white/10 shadow-md whitespace-nowrap">{p.name}</div>
-                            </div>
-                        ))}
-
-                        {tooltip && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-blue-900 px-4 py-2 rounded-xl shadow-2xl z-[100] border-2 border-yellow-500 animate-bounce text-center pointer-events-none">
-                                <p className="text-[10px] font-black uppercase tracking-widest">{tooltip.name}</p>
-                                {tooltip.status !== 'fit' && <p className="text-[9px] font-bold text-red-600 uppercase mt-1">{tooltip.status}: {tooltip.reason}</p>}
-                                <div className="flex gap-3 justify-center mt-1 text-[9px] font-bold text-slate-500"><span>G: {tooltip.g}</span><span>Apps: {tooltip.mp}</span></div>
+                    <div ref={pitchRef} onDragOver={e=>e.preventDefault()} onDrop={onFieldDrop} 
+                         className="m-2 pitch-gradient rounded-xl relative border-2 border-white/20 overflow-hidden shadow-inner">
+                        <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/><div className="box-top"/><div className="box-bot"/></div>
+                        
+                        {coachName && (
+                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none rotate-[-30deg]">
+                                <span className="text-6xl font-black uppercase text-white whitespace-nowrap">{coachName}</span>
                             </div>
                         )}
-                        <div className="absolute bottom-2 right-2 text-[8px] text-white/40 font-bold uppercase tracking-widest">Maccabi TLV • Jan 29 2026</div>
+
+                        {players.map((p, i) => (
+                            <div key={p.id} draggable onDragStart={() => { setDraggedIdx(i); setDragSource('field'); }}
+                                 onDoubleClick={() => setCaptain(p.id)}
+                                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node cursor-grab"
+                                 style={{ top: `${p.top}%`, left: `${p.left}%` }}>
+                                <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center font-black text-xs shadow-xl transition-all ${p.p === 'GK' ? 'bg-orange-600 border-white' : 'bg-yellow-400 text-blue-900 border-blue-900'}`}>
+                                    {p.n}
+                                    {captain === p.id && <div className="absolute -top-1 -right-1 bg-white text-blue-900 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black border border-blue-900 shadow-sm">C</div>}
+                                </div>
+                                <div className="mt-1 bg-blue-950/90 px-2 py-0.5 rounded text-[8px] font-bold text-white uppercase shadow-md whitespace-nowrap">{p.name}</div>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="bg-slate-800 p-3 h-32 border-t border-white/10">
-                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 h-full items-start px-2">
+                    <div className="bg-slate-900 p-4 mobile-extra-padding">
+                        <p className="text-[10px] text-slate-500 font-black mb-4 uppercase tracking-[0.2em] text-center">Bench / Reserves</p>
+                        <div className="grid grid-cols-4 gap-y-8 gap-x-2">
                             {bench.map((p, i) => (
-                                <div key={p.id} draggable onDragStart={() => setDragInfo({idx: i, src: 'bench'})} onDrop={(e) => handleSwap(e, dragInfo.idx, dragInfo.src, i, 'bench')} onDragOver={e => e.preventDefault()} className={`flex-shrink-0 flex flex-col items-center transition cursor-grab group ${p.status === 'injured' ? 'opacity-50 grayscale' : 'opacity-80 hover:opacity-100'}`}>
-                                    <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 group-hover:bg-slate-600 flex items-center justify-center text-[10px] font-bold relative">
+                                <div key={p.id} draggable onDragStart={() => { setDraggedIdx(i); setDragSource('bench'); }}
+                                     className={`flex flex-col items-center relative transition-all ${p.status !== 'fit' ? 'opacity-30 grayscale' : 'opacity-100'}`}>
+                                    <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-[10px] font-bold border border-slate-700 shadow-md">
                                         {p.n}
-                                        {p.status === 'injured' && <div className="absolute -top-1 -right-1 text-[8px]">✚</div>}
+                                        {p.status === 'injured' && <span className="absolute -top-1 -right-1 text-red-600 text-[14px]">✚</span>}
                                     </div>
-                                    <p className="text-[8px] mt-1 font-bold truncate max-w-[50px] text-center uppercase">{p.name}</p>
-                                    <p className="text-[7px] text-yellow-500/50 font-bold">{p.p}</p>
+                                    <p className="text-[8px] mt-2 font-bold text-center uppercase truncate w-full text-slate-400">{p.name}</p>
                                 </div>
                             ))}
                         </div>
@@ -220,4 +205,3 @@
     </script>
 </body>
 </html>
-

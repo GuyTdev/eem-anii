@@ -1,40 +1,42 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>מכבי תל אביב - ניהול סגל מתקדם</title>
+    <title>Maccabi TLV - Tactical Board 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --maccabi-yellow: #fde047; --maccabi-blue: #1e3a8a; }
-        body { background-color: #020617; margin: 0; font-family: sans-serif; overflow: hidden; position: fixed; width: 100%; height: 100%; }
+        body { background-color: #020617; margin: 0; font-family: 'Inter', sans-serif; overflow: hidden; position: fixed; width: 100%; height: 100%; }
         .app-container { height: 100dvh; display: flex; flex-direction: column; }
-        .pitch-gradient { background: linear-gradient(135deg, #15803d 0%, #166534 100%); position: relative; flex-grow: 1; border: 2px solid rgba(255,255,255,0.1); touch-action: none; }
-        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.3; }
+        .pitch-area { background: linear-gradient(135deg, #15803d 0%, #166534 100%); position: relative; flex-grow: 1; touch-action: none; overflow: hidden; border-radius: 20px; margin: 8px; }
+        .pitch-line { pointer-events: none; position: absolute; inset: 0; opacity: 0.3; border: 2px solid white; border-radius: 15px; }
         .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: white; transform: translateY(-50%); }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); }
-        .box-top { position: absolute; top: 0; left: 50%; width: 180px; height: 60px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
-        .box-bot { position: absolute; bottom: 0; left: 50%; width: 180px; height: 60px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
         
-        .player-node { touch-action: none; z-index: 20; position: absolute; transform: translate(-50%, -50%); cursor: grab; transition: transform 0.1s ease; }
-        .player-node:active { transform: translate(-50%, -50%) scale(1.2); z-index: 1000; cursor: grabbing; }
-
+        .player-node { 
+            position: absolute; transform: translate(-50%, -50%); 
+            z-index: 20; touch-action: none; cursor: grab;
+            transition: transform 0.1s ease, box-shadow 0.2s;
+        }
+        .player-node.dragging { z-index: 1000; transform: translate(-50%, -50%) scale(1.3); }
+        
         .tooltip-fixed {
-            position: fixed; top: 85px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9); color: white; padding: 10px 20px;
-            border-radius: 30px; border: 2px solid var(--maccabi-yellow);
+            position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 24px;
+            border-radius: 40px; border: 2px solid var(--maccabi-yellow);
             z-index: 2000; text-align: center; pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
         }
 
-        .status-icon { position: absolute; top: -5px; right: -5px; font-size: 14px; background: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .bench-area { background: #0f172a; border-top: 2px solid #1e293b; padding: 10px; min-height: 100px; transition: background 0.3s; }
-        .bench-area.drag-over { background: #1e293b; }
-        .bench-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; scrollbar-width: none; }
+        .bench-container { background: #0f172a; padding: 12px; border-top: 1px solid #1e293b; }
+        .bench-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 10px 0; -webkit-overflow-scrolling: touch; }
+        .bench-scroll::-webkit-scrollbar { display: none; }
+        
+        .status-dot { position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #0f172a; display: flex; align-items: center; justify-content: center; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -43,190 +45,176 @@
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
-        const INITIAL_SQUAD = [
-            { id: 22, name: "מליקה", n: 22, p: "GK", s: "רפלקסים", status: "fit" },
-            { id: 6, name: "אסאנטה", n: 6, p: "RB", s: "מהירות וכוח", status: "fit" },
-            { id: 4, name: "הייטור", n: 4, p: "CB", s: "מיקום", status: "fit" },
-            { id: 13, name: "שלמה", n: 13, p: "CB", s: "משחק גובה", status: "fit" },
-            { id: 3, name: "רביבו", n: 3, p: "LB", s: "הגבהות", status: "fit" },
-            { id: 28, name: "סיסוקו", n: 28, p: "CDM", s: "חילוץ כדור", status: "fit" },
-            { id: 17, name: "בליץ'", n: 17, p: "CDM", s: "אגרסיביות", status: "fit" },
-            { id: 42, name: "פרץ", n: 42, p: "CAM", s: "סיומת", status: "fit" },
-            { id: 11, name: "יחזקאל", n: 11, p: "RW", s: "דריבל", status: "fit" },
-            { id: 47, name: "סהיטי", n: 47, p: "LW", s: "טכניקה", status: "fit" },
-            { id: 34, name: "אבו פרחי", n: 34, p: "ST", s: "מהירות", status: "fit" },
-            // ספסל
-            { id: 99, name: "סיאן", n: 99, p: "ST", s: "כוח", status: "fit" },
-            { id: 19, name: "מדמון", n: 19, p: "ST", s: "חוכמת משחק", status: "fit" },
-            { id: 5, name: "קמארה", n: 5, p: "CB", s: "פיזיות", status: "injured" },
-            { id: 98, name: "ניקולסקו", n: 98, p: "ST", s: "סיומת", status: "injured" },
-            { id: 10, name: "זהבי", n: 7, p: "ST", s: "ווינריות", status: "fit" },
-            { id: 15, name: "דוידה", n: 15, p: "RW", s: "מהירות", status: "suspended" }
+        const UPDATED_SQUAD = [
+            { id: 22, name: "Melika", n: 22, p: "GK", s: "Reflexes", status: "fit" },
+            { id: 6, name: "Asante", n: 6, p: "RB", s: "Speed/Strength", status: "fit" },
+            { id: 4, name: "Heitor", n: 4, p: "CB", s: "Positioning", status: "fit" },
+            { id: 13, name: "Shlomo", n: 13, p: "CB", s: "Aerial Duels", status: "fit" },
+            { id: 3, name: "Revivo", n: 3, p: "LB", s: "Crossing", status: "fit" },
+            { id: 28, name: "Sissokho", n: 28, p: "CDM", s: "Interceptions", status: "fit" },
+            { id: 17, name: "Belic", n: 17, p: "CDM", s: "Aggression", status: "fit" },
+            { id: 42, name: "Peretz", n: 42, p: "CAM", s: "Late Box Runs", status: "fit" },
+            { id: 11, name: "Jehezkel", n: 11, p: "RW", s: "Dribbling", status: "fit" },
+            { id: 47, name: "Sahiti", n: 47, p: "LW", s: "Technical Flair", status: "fit" },
+            { id: 34, name: "Abu Farchi", n: 34, p: "ST", s: "Pace", status: "fit" },
+            // Bench
+            { id: 90, name: "Mishpati", n: 90, p: "GK", s: "Experience", status: "fit" },
+            { id: 19, name: "Madmon", n: 19, p: "ST", s: "Smart Finisher", status: "fit" },
+            { id: 15, name: "Davida", n: 15, p: "RW", s: "Acceleration", status: "fit" },
+            { id: 16, name: "Kanichowsky", n: 16, p: "CM", s: "Work Rate", status: "fit" },
+            { id: 36, name: "Shahar", n: 36, p: "CM", s: "Engine", status: "fit" },
+            { id: 29, name: "Varela", n: 29, p: "LW", s: "Directness", status: "fit" },
+            { id: 5, name: "Camara", n: 5, p: "CB", s: "Physicality", status: "injured" },
+            { id: 98, name: "Nicolaescu", n: 98, p: "ST", s: "Clinical", status: "injured" },
+            { id: 41, name: "Ben Hamo", n: 41, p: "CB", s: "Prospect", status: "fit" }
         ];
 
         const FORMATIONS = {
             "4-2-1-3": [{t:88,l:50},{t:72,l:85},{t:75,l:63},{t:75,l:37},{t:72,l:15},{t:55,l:68},{t:55,l:32},{t:35,l:50},{t:20,l:85},{t:20,l:15},{t:12,l:50}],
-            "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:40,l:70},{t:40,l:30},{t:18,l:82},{t:18,l:18},{t:12,l:50}],
-            "4-4-2": [{t:88,l:50},{t:72,l:85},{t:75,l:63},{t:75,l:37},{t:72,l:15},{t:45,l:85},{t:50,l:60},{t:50,l:40},{t:45,l:15},{t:15,l:60},{t:15,l:40}],
-            "3-5-2": [{t:88,l:50},{t:75,l:75},{t:78,l:50},{t:75,l:25},{t:50,l:90},{t:55,l:65},{t:55,l:35},{t:50,l:10},{t:35,l:50},{t:15,l:60},{t:15,l:40}],
-            "5-3-2": [{t:88,l:50},{t:72,l:90},{t:75,l:70},{t:78,l:50},{t:75,l:30},{t:72,l:10},{t:45,l:65},{t:45,l:35},{t:50,l:50},{t:15,l:60},{t:15,l:40}],
-            "Custom": null
+            "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:40,l:72},{t:40,l:28},{t:18,l:82},{t:18,l:18},{t:12,l:50}],
+            "4-4-2": [{t:88,l:50},{t:75,l:88},{t:78,l:63},{t:78,l:37},{t:75,l:12},{t:50,l:85},{t:55,l:60},{t:55,l:40},{t:50,l:15},{t:18,l:60},{t:18,l:40}],
+            "3-5-2": [{t:88,l:50},{t:78,l:75},{t:80,l:50},{t:78,l:25},{t:50,l:92},{t:58,l:65},{t:58,l:35},{t:50,l:8},{t:38,l:50},{t:15,l:62},{t:15,l:38}],
+            "5-3-2": [{t:88,l:50},{t:72,l:92},{t:75,l:72},{t:78,l:50},{t:75,l:28},{t:72,l:8},{t:48,l:68},{t:48,l:32},{t:55,l:50},{t:18,l:62},{t:18,l:38}]
         };
 
         function App() {
-            const [players, setPlayers] = useState([]);
+            const [pitch, setPitch] = useState([]);
             const [bench, setBench] = useState([]);
             const [formation, setFormation] = useState("4-2-1-3");
             const [tooltip, setTooltip] = useState(null);
-            const [isUpdating, setIsUpdating] = useState(false);
+            const [draggingId, setDraggingId] = useState(null);
             const pitchRef = useRef(null);
-            const benchRef = useRef(null);
 
             useEffect(() => {
-                const initialField = INITIAL_SQUAD.slice(0, 11).map((p, i) => ({
-                    ...p, top: FORMATIONS["4-2-1-3"][i].t, left: FORMATIONS["4-2-1-3"][i].l
-                }));
-                setPlayers(initialField);
-                setBench(INITIAL_SQUAD.slice(11));
+                setPitch(UPDATED_SQUAD.slice(0, 11).map((p, i) => ({ ...p, top: FORMATIONS["4-2-1-3"][i].t, left: FORMATIONS["4-2-1-3"][i].l })));
+                setBench(UPDATED_SQUAD.slice(11));
             }, []);
 
-            const updateLiveSquad = () => {
-                setIsUpdating(true);
-                setTimeout(() => {
-                    alert("סנכרון נתונים מול ה-API של המועדון הושלם!");
-                    setIsUpdating(false);
-                }, 1500);
+            const findCollision = (x, y, excludeId) => {
+                return pitch.find(p => {
+                    if (p.id === excludeId) return false;
+                    const dist = Math.sqrt(Math.pow(p.left - x, 2) + Math.pow(p.top - y, 2));
+                    return dist < 8; // Collision threshold
+                });
             };
 
-            const getStatusIcon = (status) => {
-                if (status === "injured") return "🩹";
-                if (status === "suspended") return "🟥";
-                return null;
-            };
-
-            // לוגיקת גרירה חכמה (תומך מגע)
-            const handleMove = (e, id, fromBench = false) => {
-                if (e.cancelable) e.preventDefault();
-                const touch = e.touches ? e.touches[0] : e;
-                const pitchRect = pitchRef.current.getBoundingClientRect();
-                const benchRect = benchRef.current.getBoundingClientRect();
+            const handleMove = (e, id, isBench = false) => {
+                const touch = e.touches[0];
+                const rect = pitchRef.current.getBoundingClientRect();
+                const x = ((touch.clientX - rect.left) / rect.width) * 100;
+                const y = ((touch.clientY - rect.top) / rect.height) * 100;
                 
-                const x = ((touch.clientX - pitchRect.left) / pitchRect.width) * 100;
-                const y = ((touch.clientY - pitchRect.top) / pitchRect.height) * 100;
+                setDraggingId(id);
+                if (isBench) return; // Logic handled on TouchEnd
 
-                if (fromBench) {
-                    // אם גוררים מהספסל למגרש
-                    if (touch.clientY < benchRect.top) {
-                        const playerToMove = bench.find(p => p.id === id);
-                        setBench(prev => prev.filter(p => p.id !== id));
-                        setPlayers(prev => [...prev, { ...playerToMove, top: y, left: x }]);
-                        setFormation("Custom");
+                setPitch(prev => prev.map(p => p.id === id ? { ...p, top: y, left: x } : p));
+                if (formation !== "Custom") setFormation("Custom");
+            };
+
+            const handleEnd = (e, id, isBench = false) => {
+                const touch = e.changedTouches[0];
+                const rect = pitchRef.current.getBoundingClientRect();
+                const x = ((touch.clientX - rect.left) / rect.width) * 100;
+                const y = ((touch.clientY - rect.top) / rect.height) * 100;
+                setDraggingId(null);
+
+                const target = findCollision(x, y, id);
+
+                if (isBench) {
+                    if (y < 100 && target) {
+                        // Swap bench player with specific pitch player
+                        const fromBench = bench.find(p => p.id === id);
+                        const fromPitch = pitch.find(p => p.id === target.id);
+                        setPitch(prev => prev.map(p => p.id === target.id ? { ...fromBench, top: p.top, left: p.left } : p));
+                        setBench(prev => prev.map(p => p.id === id ? fromPitch : p));
                     }
-                } else {
-                    // אם גוררים מהמגרש
-                    if (touch.clientY > benchRect.top) {
-                        // אם נגרר לספסל - העבר מרשימה לרשימה
-                        const playerToMove = players.find(p => p.id === id);
-                        setPlayers(prev => prev.filter(p => p.id !== id));
-                        setBench(prev => [...prev, playerToMove]);
-                    } else {
-                        // תנועה רגילה על המגרש
-                        setPlayers(prev => prev.map(p => p.id === id ? { ...p, top: y, left: x } : p));
-                        setFormation("Custom");
-                    }
+                } else if (target) {
+                    // Swap positions between two pitch players
+                    const p1 = pitch.find(p => p.id === id);
+                    const p2 = target;
+                    setPitch(prev => prev.map(p => {
+                        if (p.id === p1.id) return { ...p, top: p2.top, left: p2.left };
+                        if (p.id === p2.id) return { ...p, top: p1.top, left: p1.left };
+                        return p;
+                    }));
                 }
             };
 
             return (
                 <div className="app-container max-w-md mx-auto bg-slate-950 shadow-2xl">
-                    {/* Header */}
-                    <header className="px-4 py-3 bg-yellow-500 text-blue-900 flex justify-between items-center z-50 relative">
+                    <header className="px-5 py-4 bg-yellow-400 text-blue-900 flex justify-between items-center z-50">
                         <div>
-                            <h1 className="text-xl font-black italic uppercase leading-none">Maccabi TLV</h1>
-                            <p className="text-[10px] font-bold opacity-80 uppercase tracking-tighter">Season 2025/26 PRO</p>
+                            <h1 className="text-2xl font-black italic uppercase leading-none tracking-tighter">Maccabi TLV</h1>
+                            <p className="text-[10px] font-bold opacity-70 uppercase">Tactical Portal 2026</p>
                         </div>
-                        <button 
-                            onClick={updateLiveSquad}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all ${isUpdating ? 'bg-blue-800 text-white animate-pulse' : 'bg-blue-900 text-white active:scale-95'}`}
-                        >
-                            {isUpdating ? "Updating..." : "Live Update"}
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                        </button>
+                        <div className="bg-blue-900 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">LIVE SQUAD</div>
                     </header>
 
-                    {/* Formation Selector */}
                     <div className="flex bg-slate-900 p-2 gap-2 overflow-x-auto no-scrollbar">
                         {Object.keys(FORMATIONS).map(f => (
-                            <button 
-                                key={f} 
+                            <button key={f} 
                                 onClick={() => {
-                                    if(f !== "Custom") {
-                                        setFormation(f);
-                                        const baseSquad = [...players, ...bench].slice(0, 11);
-                                        setPlayers(baseSquad.map((p, i) => ({ ...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l })));
-                                        setBench([...players, ...bench].slice(11));
-                                    }
+                                    setFormation(f);
+                                    setPitch(prev => {
+                                        const currentSquad = [...prev];
+                                        return currentSquad.map((p, i) => ({ ...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l }));
+                                    });
                                 }}
-                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase whitespace-nowrap transition-colors ${formation === f ? 'bg-yellow-500 text-blue-900' : 'bg-slate-800 text-slate-500'}`}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${formation === f ? 'bg-yellow-400 text-blue-900' : 'bg-slate-800 text-slate-500'}`}
                             >
                                 {f}
                             </button>
                         ))}
                     </div>
 
-                    {/* Tooltip - Fixed and always visible */}
                     {tooltip && (
-                        <div className="tooltip-fixed animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="tooltip-fixed animate-in fade-in zoom-in duration-200">
                             <div className="text-[10px] text-yellow-400 font-bold uppercase tracking-widest">{tooltip.p}</div>
-                            <div className="text-lg font-black">{tooltip.name}</div>
-                            <div className="text-xs opacity-80">חוזקה: {tooltip.s}</div>
+                            <div className="text-xl font-black">{tooltip.name}</div>
+                            <div className="text-xs opacity-70 italic">Strength: {tooltip.s}</div>
                         </div>
                     )}
 
-                    {/* Pitch */}
-                    <div 
-                        ref={pitchRef} 
-                        className="pitch-gradient m-2 rounded-2xl overflow-hidden shadow-2xl relative"
-                        onClick={() => setTooltip(null)}
-                    >
-                        <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/><div className="box-top"/><div className="box-bot"/></div>
+                    <div ref={pitchRef} className="pitch-area" onClick={() => setTooltip(null)}>
+                        <div className="pitch-line">
+                            <div className="half-line" />
+                            <div className="center-circle" />
+                        </div>
                         
-                        {players.map((p) => (
+                        {pitch.map((p) => (
                             <div key={p.id} 
-                                 className="player-node" 
-                                 style={{ top: `${p.top}%`, left: `${p.left}%`, touchAction: 'none' }}
+                                 className={`player-node ${draggingId === p.id ? 'dragging' : ''}`}
+                                 style={{ top: `${p.top}%`, left: `${p.left}%` }}
                                  onTouchMove={(e) => handleMove(e, p.id)}
+                                 onTouchEnd={(e) => handleEnd(e, p.id)}
                                  onClick={(e) => { e.stopPropagation(); setTooltip(p); }}
                             >
-                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-black text-sm shadow-xl ${p.p === 'GK' ? 'bg-orange-500 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-black text-sm shadow-xl transition-colors ${p.p === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
                                     {p.n}
-                                    {getStatusIcon(p.status) && <span className="status-icon">{getStatusIcon(p.status)}</span>}
+                                    {p.status === 'injured' && <span className="status-dot bg-red-600">🩹</span>}
                                 </div>
-                                <div className="mt-1 bg-blue-900/90 px-2 py-0.5 rounded text-[9px] font-black text-white uppercase whitespace-nowrap text-center">{p.name}</div>
+                                <div className="mt-1 bg-blue-950/90 px-2 py-0.5 rounded text-[9px] font-black text-white uppercase text-center shadow-md">
+                                    {p.name}
+                                </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* Bench Area */}
-                    <div ref={benchRef} className="bench-area">
-                        <div className="flex justify-between items-center px-1 mb-2">
-                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">SQUAD / BENCH</h3>
-                            <span className="text-[9px] text-slate-600 font-bold">גרירה למגרש להחלפה</span>
-                        </div>
+                    <div className="bench-container">
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Bench (Drag to Swap)</h3>
                         <div className="bench-scroll">
                             {bench.map((p) => (
-                                <div 
-                                    key={p.id} 
-                                    className="flex-shrink-0 flex flex-col items-center relative"
-                                    style={{ touchAction: 'none' }}
-                                    onTouchMove={(e) => handleMove(e, p.id, true)}
-                                    onClick={() => setTooltip(p)}
+                                <div key={p.id} 
+                                     className={`flex-shrink-0 flex flex-col items-center relative transition-opacity ${p.status === 'injured' ? 'opacity-40' : ''}`}
+                                     onTouchMove={(e) => handleMove(e, p.id, true)}
+                                     onTouchEnd={(e) => handleEnd(e, p.id, true)}
+                                     onClick={() => setTooltip(p)}
                                 >
                                     <div className="w-11 h-11 bg-slate-800 rounded-full border-2 border-slate-700 flex items-center justify-center text-xs font-bold text-slate-400">
                                         {p.n}
-                                        {getStatusIcon(p.status) && <span className="status-icon text-[10px]">{getStatusIcon(p.status)}</span>}
+                                        {p.status === 'injured' && <span className="status-dot bg-red-600 text-white">!</span>}
                                     </div>
-                                    <p className="text-[9px] mt-1 font-bold text-slate-500 uppercase truncate w-14 text-center">{p.name}</p>
+                                    <p className="text-[9px] mt-1 font-bold text-slate-400 uppercase">{p.name}</p>
                                 </div>
                             ))}
                         </div>

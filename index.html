@@ -1,194 +1,590 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eem Anii - Maccabi 2026</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <title>Eem Anii - Maccabi TLV Pro 2026</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <style>
-        .pitch-gradient { background: linear-gradient(to bottom, #15803d 0%, #166534 100%); position: relative; }
-        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.4; }
-        .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: white; transform: translateY(-50%); }
-        .center-circle { position: absolute; top: 50%; left: 50%; width: 80px; height: 80px; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); }
-        .center-dot { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: white; border-radius: 50%; transform: translate(-50%, -50%); }
-        .box-top { position: absolute; top: 0; left: 50%; width: 200px; height: 70px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
-        .goal-top { position: absolute; top: 0; left: 50%; width: 80px; height: 30px; border: 2px solid white; border-top: 0; transform: translateX(-50%); }
-        .box-bot { position: absolute; bottom: 0; left: 50%; width: 200px; height: 70px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
-        .goal-bot { position: absolute; bottom: 0; left: 50%; width: 80px; height: 30px; border: 2px solid white; border-bottom: 0; transform: translateX(-50%); }
-        .player-node { touch-action: none; transition: transform 0.1s; z-index: 20; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .status-badge { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid white; }
+        .pitch-pattern {
+            background-color: #15803d;
+            background-image: linear-gradient(#166534 50%, transparent 50%);
+            background-size: 100% 10%;
+        }
+
+        .field-line {
+            position: absolute;
+            background-color: white;
+        }
+
+        .center-line {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 15%;
+            aspect-ratio: 1;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: transparent;
+        }
+
+        .center-spot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+            transform: translate(-50%, -50%);
+        }
+
+        .penalty-box {
+            position: absolute;
+            border: 2px solid white;
+            background: transparent;
+        }
+
+        .penalty-box-top {
+            top: 0;
+            left: 18%;
+            width: 64%;
+            height: 18%;
+            border-top: none;
+        }
+
+        .penalty-box-bottom {
+            bottom: 0;
+            left: 18%;
+            width: 64%;
+            height: 18%;
+            border-bottom: none;
+        }
+
+        .goal-box {
+            position: absolute;
+            border: 2px solid white;
+            background: transparent;
+        }
+
+        .goal-box-top {
+            top: 0;
+            left: 35%;
+            width: 30%;
+            height: 7%;
+            border-top: none;
+        }
+
+        .goal-box-bottom {
+            bottom: 0;
+            left: 35%;
+            width: 30%;
+            height: 7%;
+            border-bottom: none;
+        }
+
+        .goalkeeper-arc {
+            position: absolute;
+            width: 12%;
+            aspect-ratio: 1;
+            border: 2px solid white;
+            border-radius: 50%;
+            background: transparent;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .goalkeeper-arc-top {
+            top: 18%;
+            transform: translate(-50%, -50%);
+            clip-path: polygon(0 50%, 0 100%, 100% 100%, 100% 50%);
+        }
+
+        .goalkeeper-arc-bottom {
+            bottom: 18%;
+            transform: translate(-50%, 50%);
+            clip-path: polygon(0 0, 0 50%, 100% 50%, 100% 0);
+        }
+
+        .penalty-spot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .penalty-spot-top {
+            top: 13%;
+        }
+
+        .penalty-spot-bottom {
+            bottom: 13%;
+        }
+
+        .corner-arc {
+            position: absolute;
+            width: 2%;
+            aspect-ratio: 1;
+            border: 2px solid white;
+            border-radius: 50%;
+            background: transparent;
+        }
+
+        .corner-top-left {
+            top: -2%;
+            left: -2%;
+            clip-path: polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%);
+        }
+
+        .corner-top-right {
+            top: -2%;
+            right: -2%;
+            clip-path: polygon(0 50%, 50% 50%, 50% 100%, 0 100%);
+        }
+
+        .corner-bottom-left {
+            bottom: -2%;
+            left: -2%;
+            clip-path: polygon(50% 0, 100% 0, 100% 50%, 50% 50%);
+        }
+
+        .corner-bottom-right {
+            bottom: -2%;
+            right: -2%;
+            clip-path: polygon(0 0, 50% 0, 50% 50%, 0 50%);
+        }
+
+        .goal {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12%;
+            height: 2.5%;
+            border: 2px solid white;
+            background: transparent;
+        }
+
+        .goal-top {
+            top: 0;
+            border-top: none;
+        }
+
+        .goal-bottom {
+            bottom: 0;
+            border-bottom: none;
+        }
+
+        .player-node {
+            touch-action: none;
+            z-index: 20;
+            transition: transform 0.2s;
+        }
+
+        .dragging {
+            opacity: 0.3;
+            transform: scale(1.1);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .tooltip {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans overflow-hidden select-none">
+
+<body class="bg-slate-900 text-white font-sans overflow-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useRef, useEffect } = React;
+        const { useState } = React;
 
-        // FULL SQUAD - FEB 1, 2026 (Updated Edition)
-        const SQUAD_DATA = [
-            // STARTING 11 (Standard 4-2-3-1 Setup)
-            { id: 22, name: "Melika", n: 22, p: "GK", g: 0, mp: 15, status: "fit" },
-            { id: 4, name: "Heitor", n: 4, p: "RB", g: 1, mp: 16, status: "fit" },
-            { id: 13, name: "Shlomo", n: 13, p: "CB", g: 0, mp: 16, status: "fit" },
-            { id: 41, name: "Ben Hamo", n: 41, p: "CB", g: 0, mp: 11, status: "fit" },
-            { id: 3, name: "Revivo", n: 3, p: "LB", g: 0, mp: 20, status: "fit" },
-            { id: 28, name: "Sissokho", n: 28, p: "CDM", g: 0, mp: 17, status: "fit" },
-            { id: 42, name: "Peretz", n: 42, p: "CM", g: 11, mp: 21, status: "fit" },
-            { id: 30, name: "Itamar Noy", n: 30, p: "CAM", g: 2, mp: 21, status: "fit" },
-            { id: 11, name: "Jehezkel", n: 11, p: "RW", g: 3, mp: 21, status: "fit" },
-            { id: 7, name: "Sahiti", n: 7, p: "LW", g: 2, mp: 8, status: "fit" },
-            { id: 34, name: "Abu Farchi", n: 34, p: "ST", g: 3, mp: 19, status: "fit" },
-
-            // BENCH
-            { id: 90, name: "Mishpati", n: 90, p: "GK", g: 0, mp: 11, status: "fit" },
-            { id: 36, name: "Shahar", n: 36, p: "CM", g: 9, mp: 20, status: "fit" },
-            { id: 10, name: "Andrade", n: 10, p: "CAM", g: 1, mp: 19, status: "fit" },
-            { id: 29, name: "Varela", n: 29, p: "LW", g: 2, mp: 17, status: "fit" },
-            { id: 19, name: "Madmon", n: 19, p: "ST", g: 4, mp: 17, status: "fit" },
-            { id: 21, name: "Ben Harush", n: 21, p: "RB", g: 1, mp: 12, status: "fit" },
-            { id: 23, name: "Lederman", n: 23, p: "CDM", g: 0, mp: 9, status: "fit" },
-            { id: 6, name: "Asante", n: 6, p: "CB", g: 1, mp: 18, status: "fit" },
-            { id: 77, name: "Davida", n: 77, p: "RW", g: 1, mp: 21, status: "fit" },
-            { id: 15, name: "Malede", n: 15, p: "ST", g: 0, mp: 7, status: "fit" },
-            { id: 51, name: "Saadya", n: 51, p: "GK", g: 0, mp: 0, status: "fit" },
-
-            // INJURED / DOUBTFUL
-            { id: 5, name: "Camara", n: 5, p: "CB", g: 1, mp: 15, status: "doubtful", reason: "Recovery" },
-            { id: 17, name: "Belic", n: 17, p: "CDM", g: 0, mp: 10, status: "injured", reason: "Cheekbone" },
-            { id: 14, name: "Gropper", n: 14, p: "LB", g: 0, mp: 2, status: "injured", reason: "ACL" },
-            { id: 98, name: "Nicolaescu", n: 98, p: "ST", g: 2, mp: 10, status: "injured", reason: "ACL" }
+        // FULL 2026 SQUAD DATA - Ligat Ha'Al 2025-26 season stats only
+        // FULL 2026 SQUAD DATA - Ligat Ha'Al 2025-26 season stats only
+        const FULL_SQUAD = [
+            // Starting 11 (vs Kiryat Shmona 02/02/2026) - Confirmed - Fixed Sides
+            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 16, cs: 6 },
+            { id: 3, name: "Revivo", number: 3, pos: "DF", native: "LB", mp: 16, g: 0, a: 4 }, // Left Back
+            { id: 6, name: "Asante", number: 6, pos: "DF", native: "CB", mp: 8, g: 0, a: 0 },
+            { id: 4, name: "Heitor", number: 4, pos: "DF", native: "CB", mp: 10, g: 1, a: 0 },
+            { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 4, g: 0, a: 0 }, // Right Back
+            { id: 42, name: "Dor Peretz", number: 42, pos: "MF", native: "CM", mp: 18, g: 8, a: 2 },
+            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CAM", mp: 18, g: 2, a: 0 },
+            { id: 10, name: "Andrade", number: 10, pos: "MF", native: "CAM", mp: 14, g: 1, a: 0 },
+            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 16, g: 0, a: 1 }, // Left Wing
+            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 12, g: 2, a: 0 },
+            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 19, g: 1, a: 2 }, // Right Wing
+            // Bench / Full Squad
+            { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 3, cs: 1 },
+            { id: 28, name: "Sissokho", number: 28, pos: "MF", native: "CDM", mp: 13, g: 0, a: 1 },
+            { id: 36, name: "Ido Shahar", number: 36, pos: "MF", native: "CM", mp: 16, g: 9, a: 0 },
+            { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 18, g: 3, a: 4 },
+            { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 16, g: 3, a: 1 },
+            { id: 41, name: "Ben Hamo", number: 41, pos: "DF", native: "CB", mp: 5, g: 0, a: 0 },
+            { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 0, a: 0, status: 'injured' }, // Injured
+            { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 12, g: 0, a: 1, status: 'injured' }, // Doubtful
+            { id: 14, name: "Gropper", number: 14, pos: "DF", native: "LB", mp: 6, g: 0, a: 0, status: 'injured' }, // Injured
+            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 0, status: 'injured' }, // Injured
+            { id: 23, name: "Lederman", number: 23, pos: "MF", native: "CDM", mp: 6, g: 0, a: 0 },
+            { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 9, g: 2, a: 1, status: 'injured' }, // Injured
+            { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 8, g: 0, a: 0 },
+            { id: 60, name: "Ben Simon", number: 60, pos: "FW", native: "ST", mp: 3, g: 0, a: 0 },
+            { id: 8, name: "Sahiti", number: 8, pos: "MF", native: "RM", mp: 5, g: 0, a: 0 },
+            { id: 27, name: "Magor", number: 27, pos: "FW", native: "LW", mp: 4, g: 0, a: 0 }
         ];
 
+        // ... (skipping FORMATIONS) ...
+
         const FORMATIONS = {
-            "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:42,l:70},{t:42,l:30},{t:20,l:82},{t:20,l:18},{t:12,l:50}],
-            "4-2-3-1": [{t:88,l:50},{t:72,l:85},{t:75,l:63},{t:75,l:37},{t:72,l:15},{t:55,l:65},{t:55,l:35},{t:30,l:82},{t:25,l:50},{t:30,l:18},{t:12,l:50}],
-            "4-4-2": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:50,l:85},{t:52,l:60},{t:52,l:40},{t:50,l:15},{t:18,l:60},{t:18,l:40}],
-            "3-5-2": [{t:88,l:50},{t:75,l:50},{t:75,l:75},{t:75,l:25},{t:45,l:10},{t:50,l:35},{t:55,l:50},{t:50,l:65},{t:45,l:90},{t:18,l:40},{t:18,l:60}],
-            "5-4-1": [{t:88,l:50},{t:75,l:10},{t:78,l:30},{t:80,l:50},{t:78,l:70},{t:75,l:90},{t:52,l:20},{t:55,l:40},{t:55,l:60},{t:52,l:80},{t:22,l:50}],
+            "4-2-3-1": [{ t: 88, l: 50 }, { t: 72, l: 85 }, { t: 75, l: 63 }, { t: 75, l: 37 }, { t: 72, l: 15 }, { t: 55, l: 65 }, { t: 55, l: 35 }, { t: 30, l: 82 }, { t: 25, l: 50 }, { t: 30, l: 18 }, { t: 12, l: 50 }],
+            "4-3-3": [{ t: 88, l: 50 }, { t: 72, l: 15 }, { t: 75, l: 38 }, { t: 75, l: 62 }, { t: 72, l: 85 }, { t: 55, l: 50 }, { t: 42, l: 30 }, { t: 42, l: 70 }, { t: 20, l: 18 }, { t: 15, l: 50 }, { t: 20, l: 82 }],
+            "3-5-2": [{ t: 88, l: 50 }, { t: 75, l: 25 }, { t: 78, l: 50 }, { t: 75, l: 75 }, { t: 52, l: 10 }, { t: 55, l: 32 }, { t: 55, l: 50 }, { t: 55, l: 68 }, { t: 52, l: 90 }, { t: 18, l: 35 }, { t: 18, l: 65 }],
+            "4-4-2": [{ t: 88, l: 50 }, { t: 72, l: 15 }, { t: 75, l: 38 }, { t: 75, l: 62 }, { t: 72, l: 85 }, { t: 50, l: 15 }, { t: 52, l: 40 }, { t: 52, l: 60 }, { t: 50, l: 85 }, { t: 18, l: 35 }, { t: 18, l: 65 }],
+            "5-4-1": [{ t: 88, l: 50 }, { t: 75, l: 10 }, { t: 78, l: 30 }, { t: 80, l: 50 }, { t: 78, l: 70 }, { t: 75, l: 90 }, { t: 52, l: 20 }, { t: 55, l: 40 }, { t: 55, l: 60 }, { t: 52, l: 80 }, { t: 22, l: 50 }],
+            "4-1-4-1": [{ t: 88, l: 50 }, { t: 72, l: 15 }, { t: 75, l: 38 }, { t: 75, l: 62 }, { t: 72, l: 85 }, { t: 60, l: 50 }, { t: 38, l: 15 }, { t: 40, l: 38 }, { t: 40, l: 62 }, { t: 38, l: 85 }, { t: 15, l: 50 }],
             "Custom": null
         };
 
         function App() {
-            const [formation, setFormation] = useState("4-2-3-1");
-            const [players, setPlayers] = useState([]);
-            const [bench, setBench] = useState([]);
-            const [captain, setCaptain] = useState(42); 
+            const [formation, setFormation] = useState("4-3-3");
+            const [players, setPlayers] = useState(FULL_SQUAD.slice(0, 11).map((p, i) => ({
+                ...p, top: FORMATIONS["4-3-3"][i].t, left: FORMATIONS["4-3-3"][i].l
+            })));
+            const [bench, setBench] = useState(FULL_SQUAD.slice(11));
+            const [captainId, setCaptainId] = useState(42);
             const [dragInfo, setDragInfo] = useState(null);
-            const [tooltip, setTooltip] = useState(null);
-            const [loading, setLoading] = useState(false);
-            const pitchRef = useRef(null);
+            const [selectedPlayer, setSelectedPlayer] = useState(null);
+            const [isDragging, setIsDragging] = useState(null); // {playerIndex, startPos}
+            const fieldRef = React.useRef(null);
 
-            useEffect(() => { resetLineup(); }, []);
-
-            const resetLineup = () => {
-                setFormation("4-2-3-1");
-                setPlayers(SQUAD_DATA.slice(0, 11).map((p, i) => ({ ...p, top: FORMATIONS["4-2-3-1"][i].t, left: FORMATIONS["4-2-3-1"][i].l })));
-                setBench(SQUAD_DATA.slice(11));
+            // Unified Drag & Drop Handler
+            const onDragStart = (e, index, source) => {
+                setDragInfo({ index, source });
+                e.dataTransfer.effectAllowed = 'move';
+                // Transparent drag image or default
             };
 
-            const captureAndShare = async () => {
-                setLoading(true);
-                if (!pitchRef.current) return;
-                try {
-                    const dataUrl = await htmlToImage.toPng(pitchRef.current, { quality: 0.95, backgroundColor: '#0f172a' });
-                    if (navigator.share) {
-                        const blob = await (await fetch(dataUrl)).blob();
-                        const file = new File([blob], "maccabi-lineup.png", { type: "image/png" });
-                        await navigator.share({ title: 'Lineup', files: [file] });
-                    } else {
-                        const link = document.createElement('a'); link.download = 'maccabi-lineup.png'; link.href = dataUrl; link.click();
-                    }
-                } catch (err) { console.error(err); }
-                setLoading(false);
-            };
-
-            const handleSwap = (e, idx, src, targetIdx, targetSrc) => {
-                e.stopPropagation();
-                let newP = [...players];
-                let newB = [...bench];
-                if (src === 'bench' && targetSrc === 'field') {
-                    const out = newP[targetIdx];
-                    newP[targetIdx] = { ...newB[idx], top: out.top, left: out.left };
-                    newB[idx] = out;
-                } else if (src === 'field' && targetSrc === 'bench') {
-                    const outField = newP[idx];
-                    newP[idx] = { ...newB[targetIdx], top: outField.top, left: outField.left };
-                    newB[targetIdx] = outField;
-                } else if (src === 'field' && targetSrc === 'field') {
-                    const tmp = { t: newP[idx].top, l: newP[idx].left };
-                    newP[idx].top = newP[targetIdx].top; newP[idx].left = newP[targetIdx].left;
-                    newP[targetIdx].top = tmp.t; newP[targetIdx].left = tmp.l;
-                }
-                setPlayers(newP); setBench(newB); setDragInfo(null);
-            };
-
-            const handleFieldMove = (e) => {
+            const onDragOver = (e) => {
                 e.preventDefault();
-                if (!dragInfo || dragInfo.src !== 'field') return;
-                const rect = e.currentTarget.getBoundingClientRect();
+                e.dataTransfer.dropEffect = 'move';
+            };
+
+            const onDrop = (e, targetIndex, targetSource) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!dragInfo) return;
+
+                const { index: sourceIndex, source: sourceSource } = dragInfo;
+                if (sourceIndex === targetIndex && sourceSource === targetSource) return;
+
+                let newPlayers = [...players];
+                let newBench = [...bench];
+
+                // HEADS UP: "targetIndex" might be null if dropped on empty field (handled in field onDrop)
+
+                /* 
+                 SWAP LOGIC MATIX:
+                 1. Field -> Field (Swap data, swap pos? OR keep own pos?) 
+                    User said: "switch their positions". So Player A takes Player B's coords, and vice versa.
+                 2. Field -> Bench (Swap)
+                 3. Bench -> Field (Swap)
+                 4. Bench -> Bench (Swap)
+                */
+
+                // 1. Field <-> Field
+                if (sourceSource === 'field' && targetSource === 'field') {
+                    const sourcePlayer = newPlayers[sourceIndex];
+                    const targetPlayer = newPlayers[targetIndex];
+
+                    // Swap data BUT maintain coordinates if we want them to "jump" to each others spots
+                    // OR just swap the objects entirely including .top/.left which effectively swaps positions
+                    newPlayers[sourceIndex] = { ...targetPlayer, top: sourcePlayer.top, left: sourcePlayer.left };
+                    newPlayers[targetIndex] = { ...sourcePlayer, top: targetPlayer.top, left: targetPlayer.left };
+
+                    setPlayers(newPlayers);
+                }
+
+                // 2. Bench <-> Bench
+                else if (sourceSource === 'bench' && targetSource === 'bench') {
+                    const temp = newBench[sourceIndex];
+                    newBench[sourceIndex] = newBench[targetIndex];
+                    newBench[targetIndex] = temp;
+                    setBench(newBench);
+                }
+
+                // 3. Bench (Source) -> Field (Target)
+                else if (sourceSource === 'bench' && targetSource === 'field') {
+                    const benchPlayer = newBench[sourceIndex];
+                    const fieldPlayer = newPlayers[targetIndex];
+
+                    // Field player goes to bench
+                    newBench[sourceIndex] = fieldPlayer;
+                    // Bench player goes to field (taking field player's coords)
+                    newPlayers[targetIndex] = {
+                        ...benchPlayer,
+                        top: fieldPlayer.top,
+                        left: fieldPlayer.left
+                    };
+
+                    setPlayers(newPlayers);
+                    setBench(newBench);
+                }
+
+                // 4. Field (Source) -> Bench (Target)
+                else if (sourceSource === 'field' && targetSource === 'bench') {
+                    const fieldPlayer = newPlayers[sourceIndex];
+                    const benchPlayer = newBench[targetIndex];
+
+                    // Bench player goes to field (taking field player's coords)
+                    newPlayers[sourceIndex] = {
+                        ...benchPlayer,
+                        top: fieldPlayer.top,
+                        left: fieldPlayer.left
+                    };
+                    // Field player goes to bench
+                    newBench[targetIndex] = fieldPlayer;
+
+                    setPlayers(newPlayers);
+                    setBench(newBench);
+                }
+
+                setDragInfo(null);
+            };
+
+            // Handle dropping on empty field (Move player)
+            const onFieldDrop = (e) => {
+                e.preventDefault();
+                // If dropped on a player, stopPropagation() in that player's handler prevents this from firing
+                // So this only runs if dropped on empty grass
+                if (!dragInfo || dragInfo.source !== 'field') return;
+
+                const rect = fieldRef.current.getBoundingClientRect();
                 const x = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
                 const y = Math.max(5, Math.min(95, ((e.clientY - rect.top) / rect.height) * 100));
-                let newP = [...players];
-                newP[dragInfo.idx].top = y; newP[dragInfo.idx].left = x;
-                setPlayers(newP); setFormation("Custom"); setDragInfo(null);
+
+                setPlayers(prev => {
+                    const newP = [...prev];
+                    newP[dragInfo.index] = { ...newP[dragInfo.index], top: y, left: x };
+                    return newP;
+                });
+                setDragInfo(null);
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-900 shadow-2xl relative select-none">
-                    <header className="px-4 py-3 bg-yellow-500 text-blue-900 flex justify-between items-center z-50 shadow-md">
-                        <div>
-                            <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">EEM ANII</h1>
-                            <p className="text-[9px] font-bold uppercase mt-0.5 opacity-80">Feb 1, 2026 Edition</p>
+                <div className="flex flex-col h-screen w-full max-w-3xl mx-auto bg-slate-900 shadow-2xl relative overflow-hidden">
+                    <header className="p-4 bg-yellow-500 text-blue-900 flex justify-between items-center z-50">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest leading-none">Maccabi Tel Aviv</span>
+                            <h1 className="text-xl font-black italic tracking-tighter uppercase mt-1">EEM ANII</h1>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={resetLineup} className="bg-blue-900/10 p-2 rounded-full"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
-                            <button onClick={captureAndShare} disabled={loading} className="bg-blue-900 text-white p-2 rounded-full shadow-lg">
-                                {loading ? <span className="animate-spin block w-4 h-4 border-2 border-t-white rounded-full"></span> : <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>}
+                        <div className="flex gap-2 items-center">
+                            <button onClick={() => {
+                                const confirmed = confirm('Reset squad to default 2026 roster?');
+                                if (confirmed) {
+                                    setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
+                                        ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
+                                        left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
+                                    })));
+                                    setBench(FULL_SQUAD.slice(11));
+                                    alert('Squad refreshed!');
+                                }
+                            }}
+                                className="bg-blue-900 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none hover:bg-blue-800 transition-colors">
+                                ↻ Reset
                             </button>
+                            <select className="bg-blue-900 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none"
+                                value={formation} onChange={(e) => {
+                                    const f = e.target.value;
+                                    setFormation(f);
+                                    if (f !== "Custom") {
+                                        setPlayers(prev => prev.map((p, i) => ({ ...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l })));
+                                    }
+                                }}>
+                                {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
+                            </select>
                         </div>
                     </header>
 
-                    <div className="flex bg-slate-800 p-2 gap-2 border-b border-white/5 overflow-x-auto scrollbar-hide">
-                        {Object.keys(FORMATIONS).map(f => (
-                            <button key={f} onClick={() => { setFormation(f); if(f!=='Custom') setPlayers(prev => prev.map((p, i) => ({...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l}))); }} className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition whitespace-nowrap ${formation === f ? 'bg-yellow-500 text-blue-900' : 'bg-slate-700 text-slate-400'}`}>{f}</button>
-                        ))}
-                    </div>
+                    {/* Field Area */}
+                    <div ref={fieldRef}
+                        onDragOver={onDragOver}
+                        onDrop={onFieldDrop}
+                        className="relative flex-grow pitch-pattern m-2 border-2 border-white overflow-hidden shadow-inner">
 
-                    <div ref={pitchRef} onDragOver={e => e.preventDefault()} onDrop={handleFieldMove} className="flex-grow m-2 pitch-gradient rounded-xl overflow-hidden relative border-2 border-white/20">
-                        <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/><div className="center-dot"/><div className="box-top"/><div className="box-bot"/></div>
+                        {/* Field Markings */}
+                        <div className="field-line center-line"></div>
+                        <div className="center-circle"></div>
+                        <div className="center-spot"></div>
+                        <div className="penalty-box penalty-box-top"></div>
+                        <div className="penalty-box penalty-box-bottom"></div>
+                        <div className="goal-box goal-box-top"></div>
+                        <div className="goal-box goal-box-bottom"></div>
+                        <div className="goalkeeper-arc goalkeeper-arc-top"></div>
+                        <div className="goalkeeper-arc goalkeeper-arc-bottom"></div>
+                        <div className="penalty-spot penalty-spot-top"></div>
+                        <div className="penalty-spot penalty-spot-bottom"></div>
+                        <div className="corner-arc corner-top-left"></div>
+                        <div className="corner-arc corner-top-right"></div>
+                        <div className="corner-arc corner-bottom-left"></div>
+                        <div className="corner-arc corner-bottom-right"></div>
+                        <div className="goal goal-top"></div>
+                        <div className="goal goal-bottom"></div>
+
                         {players.map((p, i) => (
-                            <div key={p.id} draggable onDragStart={() => setDragInfo({idx: i, src: 'field'})} onDrop={(e) => handleSwap(e, dragInfo.idx, dragInfo.src, i, 'field')} onDragOver={e => e.preventDefault()} onDoubleClick={() => setCaptain(p.id)} onClick={() => { setTooltip(p); setTimeout(() => setTooltip(null), 1500); }}
-                                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node cursor-grab" style={{ top: `${p.top}%`, left: `${p.left}%` }}>
-                                <div className={`relative w-11 h-11 rounded-full border-2 flex items-center justify-center font-black text-xs shadow-lg ${p.p === 'GK' ? 'bg-orange-600 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
-                                    {p.n}
-                                    {captain === p.id && <div className="absolute -top-1 -right-1 bg-white text-blue-900 w-4 h-4 rounded-full flex items-center justify-center border border-blue-900 text-[8px] font-black">C</div>}
-                                    {p.status !== 'fit' && <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center border border-white text-[10px] ${p.status === 'injured' ? 'bg-red-600' : 'bg-orange-500'}`}>{p.status === 'injured' ? '✚' : '?'}</div>}
+                            <div key={p.id}
+                                draggable
+                                onDragStart={(e) => onDragStart(e, i, 'field')}
+                                onDragOver={onDragOver}
+                                onDrop={(e) => onDrop(e, i, 'field')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedPlayer(p); }}
+                                onDoubleClick={(e) => { e.stopPropagation(); setCaptainId(p.id); }}
+                                className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node cursor-grab ${isDragging?.playerIndex === i ? 'dragging' : ''}`}
+                                style={{ top: `${p.top}%`, left: `${p.left}%` }}>
+
+                                <div className={`relative w-12 h-12 rounded-full border-2 shadow-2xl flex items-center justify-center font-black text-sm
+                                    ${p.native === 'GK' ? 'bg-orange-600 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                                    {p.number}
+                                    {captainId === p.id && (
+                                        <span className="absolute -top-1 -right-1 bg-white text-blue-900 w-5 h-5 rounded-full border border-blue-900 flex items-center justify-center text-[8px] font-black">C</span>
+                                    )}
+                                    {/* Status Icons */}
+                                    {p.status === 'injured' && (
+                                        <span className="absolute -bottom-1 -right-1 bg-white w-5 h-5 rounded-full border border-red-500 flex items-center justify-center text-[10px] font-bold text-red-600" title="Injured">
+                                            ✚
+                                        </span>
+                                    )}
+                                    {p.status === 'red-card' && (
+                                        <span className="absolute -bottom-1 -right-1 bg-red-600 w-4 h-5 rounded-sm border border-white shadow-sm flex items-center justify-center text-[8px] text-white font-bold" title="Red Card"></span>
+                                    )}
+                                    {p.status === 'yellow-card' && (
+                                        <span className="absolute -bottom-1 -right-1 bg-yellow-400 w-4 h-5 rounded-sm border border-white shadow-sm flex items-center justify-center text-[8px] text-white font-bold" title="Yellow Card"></span>
+                                    )}
                                 </div>
-                                <div className="mt-1 bg-blue-950/80 px-2 py-0.5 rounded text-[8px] font-bold uppercase text-white border border-white/10">{p.name}</div>
+                                <div className="bg-blue-950/90 text-[10px] px-2 py-0.5 rounded-full mt-1.5 font-bold border border-white/20 uppercase tracking-tighter text-center flex flex-col">
+                                    <span>{p.name}</span>
+                                    <span className="text-[7px] text-yellow-500 opacity-80">{p.native}</span>
+                                </div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="bg-slate-800 p-3 h-36 border-t border-white/10">
-                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 h-full items-start px-2">
+                    {/* Bench Area - Optimized for Drops */}
+                    <div className="bg-slate-800 p-3 h-40 border-t border-slate-700">
+                        <h2 className="text-[10px] uppercase text-slate-400 font-bold mb-3">Bench (Drag Field Player here to replace)</h2>
+                        <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide">
                             {bench.map((p, i) => (
-                                <div key={p.id} draggable onDragStart={() => setDragInfo({idx: i, src: 'bench'})} onDrop={(e) => handleSwap(e, dragInfo.idx, dragInfo.src, i, 'bench')} onDragOver={e => e.preventDefault()} className={`flex-shrink-0 flex flex-col items-center transition cursor-grab ${p.status === 'injured' ? 'opacity-40 grayscale' : 'opacity-80 hover:opacity-100'}`}>
-                                    <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-[10px] font-bold relative">
-                                        {p.n}
-                                        {p.status === 'injured' && <div className="absolute -top-1 -right-1 text-[8px]">✚</div>}
+                                <div key={p.id}
+                                    draggable
+                                    onDragStart={(e) => onDragStart(e, i, 'bench')}
+                                    onDragOver={onDragOver}
+                                    onDrop={(e) => onDrop(e, i, 'bench')}
+                                    onClick={() => setSelectedPlayer(p)}
+                                    className="flex-shrink-0 flex flex-col items-center cursor-grab">
+                                    <div className="relative w-11 h-11 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-[10px] font-black">
+                                        {p.number}
+                                        {captainId === p.id && <span className="absolute -top-1 -right-1 bg-white text-blue-900 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-black">C</span>}
                                     </div>
-                                    <p className="text-[8px] mt-1 font-bold truncate max-w-[50px] uppercase">{p.name}</p>
-                                    <p className="text-[7px] text-yellow-500/50 font-bold">{p.p}</p>
+                                    <p className="text-[9px] mt-1.5 text-slate-300 font-bold">{p.name}</p>
+                                    <p className="text-[7px] text-slate-500 uppercase">{p.native}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
+
+                    {/* Player Tooltip */}
+                    {selectedPlayer && (
+                        <>
+                            <div className="absolute inset-0 z-[90]" onClick={() => setSelectedPlayer(null)}></div>
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-slate-900 rounded-2xl p-5 shadow-2xl z-[100] w-72 max-w-[90vw] border-4 border-yellow-500">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="text-2xl font-black text-blue-900 uppercase leading-none">{selectedPlayer.name}</h3>
+                                        <p className="text-xs font-bold text-slate-400 mt-1 uppercase">{selectedPlayer.native} • #{selectedPlayer.number}</p>
+                                    </div>
+                                    <button onClick={(e) => { e.stopPropagation(); setCaptainId(selectedPlayer.id); }}
+                                        className={`text-[9px] font-black px-3 py-1.5 rounded-full border-2 transition-all ${captainId === selectedPlayer.id ? 'bg-yellow-500 border-yellow-500 text-blue-900' : 'border-blue-900 text-blue-900'}`}>
+                                        {captainId === selectedPlayer.id ? '★ C' : 'C'}
+                                    </button>
+                                </div>
+
+                                <div className={`grid ${selectedPlayer.native === 'GK' ? 'grid-cols-2' : 'grid-cols-3'} gap-2 mb-3`}>
+                                    <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-yellow-500 text-center">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Matches</p>
+                                        <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.mp || '-'}</p>
+                                    </div>
+                                    {selectedPlayer.native === 'GK' ? (
+                                        <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-blue-900 text-center">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Clean Sheets</p>
+                                            <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.cs || '-'}</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-green-500 text-center">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Goals</p>
+                                                <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.g || 0}</p>
+                                            </div>
+                                            <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-blue-900 text-center">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Assists</p>
+                                                <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.a || 0}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="bg-green-50 p-3 rounded-xl border-l-4 border-green-500">
+                                        <p className="text-[9px] font-bold text-green-700 uppercase tracking-wide mb-1">Condition</p>
+                                        <p className="text-sm font-black text-green-900">{['Excellent', 'Good', 'Fair', 'Resting'][Math.floor(Math.random() * 4)]}</p>
+                                    </div>
+                                    <div className="bg-blue-50 p-3 rounded-xl border-l-4 border-blue-500">
+                                        <p className="text-[9px] font-bold text-blue-700 uppercase tracking-wide mb-1">Next Match</p>
+                                        <p className="text-xs font-bold text-blue-900">{['Ready to start', 'Rotation option', 'Impact sub', 'Key player'][Math.floor(Math.random() * 4)]}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    {/* Floating Side Image */}
+                    <img src="./bonboni.jpg" alt="Bonboni" className="fixed bottom-4 left-4 w-32 rounded-xl shadow-2xl border-4 border-yellow-500 z-[100] transform -rotate-6 hover:scale-110 transition-transform cursor-pointer" />
                 </div>
             );
         }
@@ -197,4 +593,5 @@
         root.render(<App />);
     </script>
 </body>
+
 </html>

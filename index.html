@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EEM ANII - Tactical Pro</title>
+    <title>EEM ANII - Tactical Swap Pro</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .pitch-gradient { background: linear-gradient(to bottom, #15803d 0%, #166534 100%); position: relative; }
-        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.2; border: 2px solid white; margin: 10px; border-radius: 15px; }
+        .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.25; border: 2px solid white; margin: 10px; border-radius: 15px; }
         .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.3); }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; transform: translate(-50%, -50%); }
         .player-node { touch-action: none; z-index: 20; cursor: grab; }
-        .player-node:active { cursor: grabbing; z-index: 50; }
+        .dragging { opacity: 0.5; transform: scale(1.1) translate(-50%, -50%); z-index: 100; cursor: grabbing; }
+        .ghost-player { pointer-events: none; position: fixed; transform: translate(-50%, -50%); z-index: 999; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .bench-item { flex: 0 0 auto; width: 70px; text-align: center; }
-        @keyframes pulse-yellow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .updating { animation: pulse-yellow 0.5s infinite; }
+        .bench-item { flex: 0 0 auto; width: 75px; transition: transform 0.2s; }
     </style>
 </head>
 <body class="bg-slate-950 text-white font-sans overflow-hidden select-none">
@@ -52,20 +51,14 @@
             { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 20, g: 4, a: 5, status: 'fit' },
             { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 18, g: 5, a: 2, status: 'fit' },
             { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 14, g: 0, a: 1, status: 'fit' },
-            { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 11, g: 3, a: 1, status: 'fit' },
-            { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 0, a: 0, status: 'injured' },
-            { id: 14, name: "Gropper", number: 14, pos: "DF", native: "LB", mp: 6, g: 0, a: 0, status: 'injured' },
-            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 0, status: 'injured' },
-            { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 8, g: 0, a: 0, status: 'fit' }
+            { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 11, g: 3, a: 1, status: 'fit' }
         ];
 
         function App() {
             const [players, setPlayers] = useState([]);
             const [bench, setBench] = useState([]);
-            const [isSplashOpen, setIsSplashOpen] = useState(true);
-            const [activeId, setActiveId] = useState(null);
+            const [dragInfo, setDragInfo] = useState(null);
             const [isUpdating, setIsUpdating] = useState(false);
-            const [tooltip, setTooltip] = useState(null);
             const pitchRef = useRef(null);
             const benchRef = useRef(null);
 
@@ -74,133 +67,118 @@
                 setBench(INITIAL_SQUAD.slice(11));
             }, []);
 
-            const updateStatus = () => {
-                setIsUpdating(true);
-                setTimeout(() => {
-                    const updatePlayer = (p) => ({
-                        ...p,
-                        status: Math.random() > 0.85 ? (p.status === 'fit' ? 'injured' : 'fit') : p.status,
-                        mp: p.mp + (Math.random() > 0.9 ? 1 : 0)
-                    });
-                    setPlayers(prev => prev.map(updatePlayer));
-                    setBench(prev => prev.map(updatePlayer));
-                    setIsUpdating(false);
-                }, 1000);
-            };
-
-            const changeFormation = (name) => {
-                const coords = FORMATIONS[name];
-                setPlayers(prev => prev.map((p, i) => ({ ...p, top: coords[i].t, left: coords[i].l })));
+            const handlePointerDown = (e, player, isFromBench) => {
+                setDragInfo({
+                    player,
+                    isFromBench,
+                    x: e.clientX,
+                    y: e.clientY
+                });
             };
 
             const handlePointerMove = (e) => {
-                if (!activeId) return;
-                const rect = pitchRef.current.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                setPlayers(prev => prev.map(p => p.id === activeId ? { ...p, top: y, left: x } : p));
+                if (!dragInfo) return;
+                setDragInfo(prev => ({ ...prev, x: e.clientX, y: e.clientY }));
             };
 
             const handlePointerUp = (e) => {
-                if (!activeId) return;
+                if (!dragInfo) return;
+                
                 const benchRect = benchRef.current.getBoundingClientRect();
-                const isOverBench = e.clientY > benchRect.top;
-
+                const pitchRect = pitchRef.current.getBoundingClientRect();
+                const isDropOnBench = e.clientY > benchRect.top;
+                
                 let newPlayers = [...players];
                 let newBench = [...bench];
 
-                const pIdx = newPlayers.findIndex(p => p.id === activeId);
-                const bIdx = newBench.findIndex(p => p.id === activeId);
+                if (dragInfo.isFromBench) {
+                    // Scenario: Bench to Pitch (Swap with closest field player)
+                    if (!isDropOnBench) {
+                        const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
+                        const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
+                        
+                        let closestIdx = 0; let minDist = Infinity;
+                        newPlayers.forEach((p, i) => {
+                            const d = Math.sqrt(Math.pow(p.top - dropY, 2) + Math.pow(p.left - dropX, 2));
+                            if (d < minDist) { minDist = d; closestIdx = i; }
+                        });
 
-                if (pIdx !== -1) {
-                    const dragged = newPlayers[pIdx];
-                    if (isOverBench) {
-                        // Field to Bench Swap (Always keeps 11)
-                        const benchItems = benchRef.current.querySelectorAll('.bench-item');
-                        let closestBIdx = 0; let minD = Infinity;
-                        benchItems.forEach((item, idx) => {
+                        const fieldPlayer = newPlayers[closestIdx];
+                        const benchPlayer = dragInfo.player;
+
+                        newPlayers[closestIdx] = { ...benchPlayer, top: fieldPlayer.top, left: fieldPlayer.left };
+                        newBench = newBench.map(p => p.id === benchPlayer.id ? fieldPlayer : p);
+                    }
+                } else {
+                    // Scenario: Field to somewhere
+                    if (isDropOnBench) {
+                        // Field to Bench Swap
+                        const items = benchRef.current.querySelectorAll('.bench-item');
+                        let closestBenchIdx = 0; let minX = Infinity;
+                        items.forEach((item, idx) => {
                             const rect = item.getBoundingClientRect();
                             const d = Math.abs(e.clientX - (rect.left + rect.width/2));
-                            if (d < minD) { minD = d; closestBIdx = idx; }
+                            if (d < minX) { minX = d; closestBenchIdx = idx; }
                         });
-                        const targetFromBench = newBench[closestBIdx];
-                        // GK Safety
-                        if (targetFromBench.pos === 'GK' && dragged.pos !== 'GK') {
-                            const gkIdx = newPlayers.findIndex(pl => pl.pos === 'GK');
-                            const currentGk = newPlayers[gkIdx];
-                            newPlayers[gkIdx] = { ...targetFromBench, top: currentGk.top, left: currentGk.left };
-                            newBench[closestBIdx] = currentGk;
-                            newPlayers[pIdx] = { ...dragged, top: dragged.top, left: dragged.left };
-                        } else {
-                            newPlayers[pIdx] = { ...targetFromBench, top: dragged.top, left: dragged.left };
-                            newBench[closestBIdx] = dragged;
-                        }
+
+                        const fieldPlayer = dragInfo.player;
+                        const benchPlayer = newBench[closestBenchIdx];
+
+                        newPlayers = newPlayers.map(p => p.id === fieldPlayer.id ? { ...benchPlayer, top: fieldPlayer.top, left: fieldPlayer.left } : p);
+                        newBench[closestBenchIdx] = fieldPlayer;
                     } else {
-                        // Field to Field Swap
-                        const targetIdx = newPlayers.findIndex(p => p.id !== activeId && 
-                            Math.abs(p.top - dragged.top) < 10 && Math.abs(p.left - dragged.left) < 10);
+                        // Field to Field Swap or Move
+                        const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
+                        const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
+
+                        const targetIdx = newPlayers.findIndex(p => p.id !== dragInfo.player.id && 
+                            Math.abs(p.top - dropY) < 8 && Math.abs(p.left - dropX) < 8);
+
                         if (targetIdx !== -1) {
                             const target = newPlayers[targetIdx];
+                            const dragged = newPlayers.find(p => p.id === dragInfo.player.id);
                             const oldT = dragged.top, oldL = dragged.left;
-                            newPlayers[pIdx] = { ...target, top: oldT, left: oldL };
-                            newPlayers[targetIdx] = { ...dragged, top: target.top, left: target.left };
+                            
+                            newPlayers = newPlayers.map(p => {
+                                if (p.id === dragged.id) return { ...target, top: oldT, left: oldL };
+                                if (p.id === target.id) return { ...dragged, top: target.top, left: target.left };
+                                return p;
+                            });
+                        } else {
+                            // Just move to new spot
+                            newPlayers = newPlayers.map(p => p.id === dragInfo.player.id ? { ...p, top: dropY, left: dropX } : p);
                         }
-                    }
-                } else if (bIdx !== -1 && !isOverBench) {
-                    // Bench to Field Swap
-                    const dragged = newBench[bIdx];
-                    const rect = pitchRef.current.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 100;
-                    const y = ((e.clientY - rect.top) / rect.height) * 100;
-                    let targetPIdx = 0; let minD = Infinity;
-                    newPlayers.forEach((p, idx) => {
-                        const d = Math.sqrt(Math.pow(p.top - y, 2) + Math.pow(p.left - x, 2));
-                        if (d < minD) { minD = d; targetPIdx = idx; }
-                    });
-                    const target = newPlayers[targetPIdx];
-                    if (dragged.pos === 'GK') {
-                        const gkIdx = newPlayers.findIndex(pl => pl.pos === 'GK');
-                        const curGk = newPlayers[gkIdx];
-                        newPlayers[gkIdx] = { ...dragged, top: curGk.top, left: curGk.left };
-                        newBench[bIdx] = curGk;
-                    } else {
-                        newPlayers[targetPIdx] = { ...dragged, top: target.top, left: target.left };
-                        newBench[bIdx] = target;
                     }
                 }
 
                 setPlayers(newPlayers);
                 setBench(newBench);
-                setActiveId(null);
+                setDragInfo(null);
+            };
+
+            const updateStatus = () => {
+                setIsUpdating(true);
+                setTimeout(() => setIsUpdating(false), 800);
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-900 overflow-hidden relative touch-none"
+                <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-950 overflow-hidden relative touch-none"
                      onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
                     
-                    {/* Splash/Icon */}
-                    <div onClick={() => setIsSplashOpen(!isSplashOpen)}
-                        className={`transition-all duration-500 ease-in-out cursor-pointer flex items-center justify-center
-                            ${isSplashOpen ? 'fixed inset-0 z-[100] bg-slate-950/98' : 'absolute top-14 left-4 z-0 opacity-20'}`}>
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvI5-HIL22_wvCk8KaxmBsLrBStS36PgbIB8Tn8FIf8orpuG075aDiJ5E&s=10" 
-                             className={`transition-all duration-500 ${isSplashOpen ? 'w-64 h-64' : 'w-10 h-10 rounded-full'}`}/>
-                    </div>
-
                     <header className="p-4 bg-yellow-500 text-blue-900 shadow-xl z-50">
                         <div className="flex justify-between items-center mb-4">
                             <div>
-                                <h1 className="font-black text-2xl leading-none italic uppercase tracking-tighter">EEM ANII</h1>
-                                <p className="text-[10px] font-bold opacity-80 uppercase">Tactical Suite 2026</p>
+                                <h1 className="font-black text-2xl leading-none italic uppercase">EEM ANII</h1>
+                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tactical Suite 2026</p>
                             </div>
-                            <button onClick={updateStatus} disabled={isUpdating}
-                                    className={`bg-blue-950 text-white text-[9px] font-black px-4 py-2 rounded-full uppercase flex items-center gap-2 ${isUpdating ? 'opacity-50' : 'active:scale-95'}`}>
-                                <span className={isUpdating ? 'updating' : ''}>Update Status</span>
+                            <button onClick={updateStatus} className="bg-blue-950 text-white text-[9px] font-black px-4 py-2 rounded-full uppercase active:scale-90 transition-transform">
+                                {isUpdating ? 'Updating...' : 'Refresh Status'}
                             </button>
                         </div>
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                             {Object.keys(FORMATIONS).map(f => (
-                                <button key={f} onClick={() => changeFormation(f)}
-                                        className="bg-blue-950/10 border border-blue-900/20 text-blue-900 text-[9px] font-black px-3 py-1.5 rounded-lg hover:bg-blue-950 hover:text-white transition-all whitespace-nowrap uppercase">
+                                <button key={f} onClick={() => setPlayers(prev => prev.map((p, i) => ({ ...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l })))}
+                                        className="bg-blue-950/10 border border-blue-900/20 text-blue-900 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase whitespace-nowrap">
                                     {f}
                                 </button>
                             ))}
@@ -209,54 +187,43 @@
 
                     <div ref={pitchRef} className="flex-grow relative pitch-gradient m-2 rounded-3xl border-2 border-white/10 overflow-hidden z-10">
                         <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/></div>
+                        
                         {players.map((p) => (
-                            <div key={p.id} onPointerDown={() => setActiveId(p.id)}
-                                 onClick={() => setTooltip(p)}
-                                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node"
-                                 style={{ top: `${p.top}%`, left: `${p.left}%`, zIndex: activeId === p.id ? 100 : 20 }}>
-                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-black shadow-xl transition-transform ${activeId === p.id ? 'scale-125' : ''} ${p.pos === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                            <div key={p.id} onPointerDown={(e) => handlePointerDown(e, p, false)}
+                                 className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node ${dragInfo?.player.id === p.id ? 'opacity-20' : ''}`}
+                                 style={{ top: `${p.top}%`, left: `${p.left}%` }}>
+                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-black shadow-lg ${p.pos === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
                                     {p.number}
-                                    {p.status === 'injured' && <div className="absolute -top-1 -right-1 bg-red-600 w-4 h-4 rounded-full border border-white text-[8px] flex items-center justify-center text-white">✚</div>}
                                 </div>
-                                <span className="mt-1 bg-blue-950/90 px-2 py-0.5 rounded text-[9px] font-bold text-white border border-white/10 whitespace-nowrap">{p.name}</span>
+                                <span className="mt-1 bg-blue-950/90 px-2 py-0.5 rounded text-[9px] font-bold text-white border border-white/10">{p.name}</span>
                             </div>
                         ))}
-
-                        {tooltip && (
-                            <div className="absolute inset-0 bg-slate-950/80 z-[150] flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setTooltip(null)}>
-                                <div className="bg-slate-900 border border-yellow-500/50 p-6 rounded-3xl w-full max-w-[260px] text-center shadow-2xl" onClick={e => e.stopPropagation()}>
-                                    <h3 className="text-2xl font-black text-yellow-500 uppercase italic mb-1">{tooltip.name}</h3>
-                                    <p className="text-xs text-slate-500 font-bold mb-4">#{tooltip.number} | {tooltip.native}</p>
-                                    <div className="grid grid-cols-3 gap-2 border-y border-white/10 py-4 mb-4">
-                                        <div><p className="text-[9px] text-slate-500 uppercase mb-1">Apps</p><p className="font-black text-lg">{tooltip.mp}</p></div>
-                                        <div><p className="text-[9px] text-slate-500 uppercase mb-1">{tooltip.pos === 'GK' ? 'CS' : 'G'}</p><p className="font-black text-lg text-yellow-500">{tooltip.pos === 'GK' ? tooltip.cs : tooltip.g || 0}</p></div>
-                                        <div><p className="text-[9px] text-slate-500 uppercase mb-1">Ast</p><p className="font-black text-lg text-blue-400">{tooltip.a || 0}</p></div>
-                                    </div>
-                                    <button onClick={() => setTooltip(null)} className="w-full bg-yellow-500 text-blue-900 py-3 rounded-xl font-black uppercase tracking-widest text-xs active:scale-95 transition-transform">Close</button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    <div ref={benchRef} className="bg-slate-900 p-4 border-t border-white/10 min-h-[150px] z-10">
-                        <p className="text-[10px] font-black text-slate-500 tracking-widest mb-4 uppercase italic flex justify-between">
-                            <span>Bench / Reserve</span>
-                            <span className="opacity-50">Drag to pitch &rarr;</span>
-                        </p>
-                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6">
+                    <div ref={benchRef} className="bg-slate-900 p-4 border-t border-white/10 min-h-[140px] z-10">
+                        <p className="text-[10px] font-black text-slate-500 tracking-widest mb-3 uppercase italic">Substitutes (Drag to Pitch)</p>
+                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
                             {bench.map((p) => (
-                                <div key={p.id} onPointerDown={() => setActiveId(p.id)}
-                                     className={`bench-item transition-all ${activeId === p.id ? 'opacity-0' : 'opacity-100'} ${p.status === 'injured' ? 'grayscale opacity-40' : ''}`}>
-                                    <div className="w-12 h-12 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center text-xs font-black mx-auto shadow-lg relative">
+                                <div key={p.id} onPointerDown={(e) => handlePointerDown(e, p, true)}
+                                     className={`bench-item flex flex-col items-center ${dragInfo?.player.id === p.id ? 'opacity-20' : ''}`}>
+                                    <div className="w-12 h-12 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center text-xs font-black shadow-lg">
                                         {p.number}
-                                        {p.status === 'injured' && <div className="absolute -top-1 -right-1 text-red-500 text-[10px]">✚</div>}
                                     </div>
-                                    <p className="text-[10px] mt-2 font-black text-slate-300 uppercase truncate px-1 bg-slate-950/50 rounded-md py-0.5">{p.name}</p>
+                                    <p className="text-[10px] mt-2 font-black text-slate-300 uppercase w-full text-center truncate">{p.name}</p>
                                     <p className="text-[7px] font-bold text-yellow-600/70 uppercase">{p.native}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
+
+                    {/* Drag Ghost Overlay */}
+                    {dragInfo && (
+                        <div className="ghost-player" style={{ left: dragInfo.x, top: dragInfo.y }}>
+                            <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-black shadow-2xl scale-110 ${dragInfo.player.pos === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                                {dragInfo.player.number}
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }

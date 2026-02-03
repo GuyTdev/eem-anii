@@ -17,7 +17,7 @@
         .goal-area-bottom { position: absolute; bottom: 0; left: 35%; right: 35%; height: 6%; border: 2px solid white; border-bottom: 0; }
         .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.4); }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; border: 1px solid rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); }
-        .player-node { touch-action: none; z-index: 20; }
+        .player-node { touch-action: none; z-index: 20; transition: transform 0.2s ease; }
         .bench-scroll { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 3.5rem; }
         .bench-item { flex: 0 0 75px; scroll-snap-align: center; text-align: center; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -25,6 +25,7 @@
         .captain-badge { animation: crown-pulse 2s infinite; }
         .status-injured { border-color: #ef4444 !important; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
         .status-doubtful { border-color: #f59e0b !important; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        .swap-target { transform: scale(1.2); filter: drop-shadow(0 0 15px #3b82f6); z-index: 30; }
     </style>
 </head>
 <body class="bg-slate-950 text-white font-sans overflow-hidden select-none">
@@ -73,6 +74,7 @@
             const [players, setPlayers] = useState([]);
             const [bench, setBench] = useState([]);
             const [dragInfo, setDragInfo] = useState(null);
+            const [hoverId, setHoverId] = useState(null);
             const [tooltipPlayer, setTooltipPlayer] = useState(null);
             const [captainId, setCaptainId] = useState(42);
             const pitchRef = useRef(null);
@@ -89,6 +91,24 @@
                 setDragInfo({ player, isFromBench, x: e.clientX, y: e.clientY });
             };
 
+            const handlePointerMove = (e) => {
+                if (!dragInfo) return;
+                setDragInfo(prev => ({ ...prev, x: e.clientX, y: e.clientY }));
+
+                const pitchRect = pitchRef.current.getBoundingClientRect();
+                const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
+                const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
+
+                // Detect if hovering over another player on the pitch
+                let targetId = null;
+                players.forEach(p => {
+                    if (p.id === dragInfo.player.id) return;
+                    const d = Math.sqrt(Math.pow(p.top - dropY, 2) + Math.pow(p.left - dropX, 2));
+                    if (d < 8) targetId = p.id;
+                });
+                setHoverId(targetId);
+            };
+
             const handlePointerUp = (e) => {
                 if (!dragInfo) return;
                 const benchRect = benchRef.current.getBoundingClientRect();
@@ -97,10 +117,12 @@
                 
                 let newP = [...players], newB = [...bench];
 
+                const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
+                const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
+
                 if (dragInfo.isFromBench) {
                     if (!isDropOnBench) {
-                        const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
-                        const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
+                        // Swap bench player with closest pitch player
                         let closestIdx = 0, minDist = Infinity;
                         newP.forEach((p, i) => {
                             const d = Math.sqrt(Math.pow(p.top - dropY, 2) + Math.pow(p.left - dropX, 2));
@@ -112,6 +134,7 @@
                     }
                 } else {
                     if (isDropOnBench) {
+                        // Swap pitch player with closest bench player
                         const items = benchRef.current.querySelectorAll('.bench-item');
                         let closestBIdx = 0, minX = Infinity;
                         items.forEach((item, idx) => {
@@ -123,17 +146,36 @@
                         newP = newP.map(p => p.id === dragInfo.player.id ? { ...targetBench, top: p.top, left: p.left } : p);
                         newB[closestBIdx] = dragInfo.player;
                     } else {
-                        const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
-                        const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
-                        newP = newP.map(p => p.id === dragInfo.player.id ? { ...p, top: dropY, left: dropX } : p);
+                        // Check for pitch-to-pitch swap
+                        let targetIdx = -1;
+                        newP.forEach((p, i) => {
+                            if (p.id === dragInfo.player.id) return;
+                            const d = Math.sqrt(Math.pow(p.top - dropY, 2) + Math.pow(p.left - dropX, 2));
+                            if (d < 8) targetIdx = i;
+                        });
+
+                        if (targetIdx !== -1) {
+                            const playerA = newP.find(p => p.id === dragInfo.player.id);
+                            const playerB = newP[targetIdx];
+                            const tempTop = playerA.top, tempLeft = playerA.left;
+                            
+                            newP = newP.map(p => {
+                                if (p.id === playerA.id) return { ...playerA, top: playerB.top, left: playerB.left };
+                                if (p.id === playerB.id) return { ...playerB, top: tempTop, left: tempLeft };
+                                return p;
+                            });
+                        } else {
+                            // Simple move
+                            newP = newP.map(p => p.id === dragInfo.player.id ? { ...p, top: dropY, left: dropX } : p);
+                        }
                     }
                 }
-                setPlayers(newP); setBench(newB); setDragInfo(null);
+                setPlayers(newP); setBench(newB); setDragInfo(null); setHoverId(null);
             };
 
             return (
                 <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-950 overflow-hidden relative touch-none"
-                     onPointerMove={(e) => dragInfo && setDragInfo({...dragInfo, x: e.clientX, y: e.clientY})} onPointerUp={handlePointerUp}>
+                     onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
                     
                     <header className="p-4 bg-yellow-500 text-blue-900 shadow-xl z-50">
                         <div className="flex justify-between items-center mb-3">
@@ -153,7 +195,9 @@
                         </div>
                         
                         {players.map((p) => (
-                            <div key={p.id} className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node ${dragInfo?.player.id === p.id ? 'opacity-20' : ''}`}
+                            <div key={p.id} className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node 
+                                ${dragInfo?.player.id === p.id ? 'opacity-20' : ''} 
+                                ${hoverId === p.id ? 'swap-target' : ''}`}
                                  style={{ top: `${p.top}%`, left: `${p.left}%` }}>
                                 <div onPointerDown={(e) => handlePointerDown(e, p, false)} onDoubleClick={() => setCaptainId(p.id)}
                                      className={`relative w-11 h-11 rounded-full border-2 flex items-center justify-center font-black shadow-lg ${p.pos === 'GK' ? 'bg-orange-500 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>

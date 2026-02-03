@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EEM ANII - Tactical Swap Pro</title>
+    <title>EEM ANII - Tactical Pro Elite</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -13,11 +13,14 @@
         .pitch-lines { pointer-events: none; position: absolute; inset: 0; opacity: 0.25; border: 2px solid white; margin: 10px; border-radius: 15px; }
         .half-line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.3); }
         .center-circle { position: absolute; top: 50%; left: 50%; width: 70px; height: 70px; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; transform: translate(-50%, -50%); }
-        .player-node { touch-action: none; z-index: 20; cursor: grab; }
-        .dragging { opacity: 0.5; transform: scale(1.1) translate(-50%, -50%); z-index: 100; cursor: grabbing; }
+        .player-node { touch-action: none; z-index: 20; }
         .ghost-player { pointer-events: none; position: fixed; transform: translate(-50%, -50%); z-index: 999; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .bench-item { flex: 0 0 auto; width: 75px; transition: transform 0.2s; }
+        .bench-item { flex: 0 0 auto; width: 85px; text-align: center; }
+        .info-btn { transition: all 0.2s; }
+        .info-btn:hover { transform: scale(1.2); background: white; color: black; }
+        @keyframes crown-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .captain-badge { animation: crown-pulse 2s infinite; }
     </style>
 </head>
 <body class="bg-slate-950 text-white font-sans overflow-hidden select-none">
@@ -29,12 +32,11 @@
         const FORMATIONS = {
             "4-3-3": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:55,l:50},{t:40,l:75},{t:40,l:25},{t:20,l:82},{t:20,l:18},{t:12,l:50}],
             "4-4-2": [{t:88,l:50},{t:72,l:85},{t:75,l:65},{t:75,l:35},{t:72,l:15},{t:50,l:85},{t:55,l:60},{t:55,l:40},{t:50,l:15},{t:22,l:65},{t:22,l:35}],
-            "3-5-2": [{t:88,l:50},{t:78,l:50},{t:78,l:75},{t:78,l:25},{t:50,l:85},{t:50,l:15},{t:55,l:50},{t:40,l:68},{t:40,l:32},{t:18,l:60},{t:18,l:40}],
-            "5-4-1": [{t:88,l:50},{t:75,l:50},{t:75,l:85},{t:75,l:70},{t:75,l:30},{t:75,l:15},{t:45,l:80},{t:48,l:60},{t:48,l:40},{t:45,l:20},{t:15,l:50}]
+            "3-5-2": [{t:88,l:50},{t:78,l:50},{t:78,l:75},{t:78,l:25},{t:50,l:85},{t:50,l:15},{t:55,l:50},{t:40,l:68},{t:40,l:32},{t:18,l:60},{t:18,l:40}]
         };
 
         const INITIAL_SQUAD = [
-            { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 18, cs: 8, status: 'fit' },
+            { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 18, cs: 8, g:0, a:0, status: 'fit' },
             { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 6, g: 0, a: 1, status: 'fit' },
             { id: 4, name: "Heitor", number: 4, pos: "DF", native: "CB", mp: 12, g: 1, a: 0, status: 'fit' },
             { id: 6, name: "Asante", number: 6, pos: "DF", native: "CB", mp: 10, g: 0, a: 0, status: 'fit' },
@@ -45,7 +47,7 @@
             { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 22, g: 2, a: 4, status: 'fit' },
             { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 18, g: 1, a: 2, status: 'fit' },
             { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 14, g: 3, a: 0, status: 'fit' },
-            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 16, cs: 6, status: 'fit' },
+            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 16, cs: 6, g:0, a:0, status: 'fit' },
             { id: 28, name: "Sissokho", number: 28, pos: "MF", native: "CDM", mp: 15, g: 0, a: 2, status: 'fit' },
             { id: 36, name: "Ido Shahar", number: 36, pos: "MF", native: "CM", mp: 18, g: 11, a: 1, status: 'fit' },
             { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 20, g: 4, a: 5, status: 'fit' },
@@ -58,7 +60,8 @@
             const [players, setPlayers] = useState([]);
             const [bench, setBench] = useState([]);
             const [dragInfo, setDragInfo] = useState(null);
-            const [isUpdating, setIsUpdating] = useState(false);
+            const [tooltipPlayer, setTooltipPlayer] = useState(null);
+            const [captainId, setCaptainId] = useState(42); // Default Dor Peretz
             const pitchRef = useRef(null);
             const benchRef = useRef(null);
 
@@ -68,12 +71,8 @@
             }, []);
 
             const handlePointerDown = (e, player, isFromBench) => {
-                setDragInfo({
-                    player,
-                    isFromBench,
-                    x: e.clientX,
-                    y: e.clientY
-                });
+                if (e.target.closest('.info-btn')) return; // Don't drag if clicking 'i'
+                setDragInfo({ player, isFromBench, x: e.clientX, y: e.clientY });
             };
 
             const handlePointerMove = (e) => {
@@ -83,7 +82,6 @@
 
             const handlePointerUp = (e) => {
                 if (!dragInfo) return;
-                
                 const benchRect = benchRef.current.getBoundingClientRect();
                 const pitchRect = pitchRef.current.getBoundingClientRect();
                 const isDropOnBench = e.clientY > benchRect.top;
@@ -92,27 +90,21 @@
                 let newBench = [...bench];
 
                 if (dragInfo.isFromBench) {
-                    // Scenario: Bench to Pitch (Swap with closest field player)
                     if (!isDropOnBench) {
                         const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
                         const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
-                        
                         let closestIdx = 0; let minDist = Infinity;
                         newPlayers.forEach((p, i) => {
                             const d = Math.sqrt(Math.pow(p.top - dropY, 2) + Math.pow(p.left - dropX, 2));
                             if (d < minDist) { minDist = d; closestIdx = i; }
                         });
-
                         const fieldPlayer = newPlayers[closestIdx];
                         const benchPlayer = dragInfo.player;
-
                         newPlayers[closestIdx] = { ...benchPlayer, top: fieldPlayer.top, left: fieldPlayer.left };
                         newBench = newBench.map(p => p.id === benchPlayer.id ? fieldPlayer : p);
                     }
                 } else {
-                    // Scenario: Field to somewhere
                     if (isDropOnBench) {
-                        // Field to Bench Swap
                         const items = benchRef.current.querySelectorAll('.bench-item');
                         let closestBenchIdx = 0; let minX = Infinity;
                         items.forEach((item, idx) => {
@@ -120,68 +112,50 @@
                             const d = Math.abs(e.clientX - (rect.left + rect.width/2));
                             if (d < minX) { minX = d; closestBenchIdx = idx; }
                         });
-
                         const fieldPlayer = dragInfo.player;
                         const benchPlayer = newBench[closestBenchIdx];
-
                         newPlayers = newPlayers.map(p => p.id === fieldPlayer.id ? { ...benchPlayer, top: fieldPlayer.top, left: fieldPlayer.left } : p);
                         newBench[closestBenchIdx] = fieldPlayer;
                     } else {
-                        // Field to Field Swap or Move
                         const dropX = ((e.clientX - pitchRect.left) / pitchRect.width) * 100;
                         const dropY = ((e.clientY - pitchRect.top) / pitchRect.height) * 100;
-
                         const targetIdx = newPlayers.findIndex(p => p.id !== dragInfo.player.id && 
-                            Math.abs(p.top - dropY) < 8 && Math.abs(p.left - dropX) < 8);
+                            Math.abs(p.top - dropY) < 10 && Math.abs(p.left - dropX) < 10);
 
                         if (targetIdx !== -1) {
                             const target = newPlayers[targetIdx];
                             const dragged = newPlayers.find(p => p.id === dragInfo.player.id);
                             const oldT = dragged.top, oldL = dragged.left;
-                            
                             newPlayers = newPlayers.map(p => {
                                 if (p.id === dragged.id) return { ...target, top: oldT, left: oldL };
                                 if (p.id === target.id) return { ...dragged, top: target.top, left: target.left };
                                 return p;
                             });
                         } else {
-                            // Just move to new spot
                             newPlayers = newPlayers.map(p => p.id === dragInfo.player.id ? { ...p, top: dropY, left: dropX } : p);
                         }
                     }
                 }
-
-                setPlayers(newPlayers);
-                setBench(newBench);
-                setDragInfo(null);
+                setPlayers(newPlayers); setBench(newBench); setDragInfo(null);
             };
 
-            const updateStatus = () => {
-                setIsUpdating(true);
-                setTimeout(() => setIsUpdating(false), 800);
-            };
+            const toggleCaptain = (id) => setCaptainId(id);
 
             return (
                 <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-950 overflow-hidden relative touch-none"
                      onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
                     
                     <header className="p-4 bg-yellow-500 text-blue-900 shadow-xl z-50">
-                        <div className="flex justify-between items-center mb-4">
-                            <div>
-                                <h1 className="font-black text-2xl leading-none italic uppercase">EEM ANII</h1>
-                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tactical Suite 2026</p>
+                        <div className="flex justify-between items-center mb-3">
+                            <h1 className="font-black text-2xl italic uppercase tracking-tighter">EEM ANII</h1>
+                            <div className="flex gap-2">
+                                {["4-3-3", "4-4-2", "3-5-2"].map(f => (
+                                    <button key={f} onClick={() => setPlayers(prev => prev.map((p, i) => ({ ...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l })))}
+                                            className="bg-blue-900 text-white text-[8px] font-black px-2 py-1 rounded uppercase">
+                                        {f}
+                                    </button>
+                                ))}
                             </div>
-                            <button onClick={updateStatus} className="bg-blue-950 text-white text-[9px] font-black px-4 py-2 rounded-full uppercase active:scale-90 transition-transform">
-                                {isUpdating ? 'Updating...' : 'Refresh Status'}
-                            </button>
-                        </div>
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                            {Object.keys(FORMATIONS).map(f => (
-                                <button key={f} onClick={() => setPlayers(prev => prev.map((p, i) => ({ ...p, top: FORMATIONS[f][i].t, left: FORMATIONS[f][i].l })))}
-                                        className="bg-blue-950/10 border border-blue-900/20 text-blue-900 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase whitespace-nowrap">
-                                    {f}
-                                </button>
-                            ))}
                         </div>
                     </header>
 
@@ -189,32 +163,63 @@
                         <div className="pitch-lines"><div className="half-line"/><div className="center-circle"/></div>
                         
                         {players.map((p) => (
-                            <div key={p.id} onPointerDown={(e) => handlePointerDown(e, p, false)}
+                            <div key={p.id} 
+                                 onPointerDown={(e) => handlePointerDown(e, p, false)}
+                                 onDoubleClick={() => toggleCaptain(p.id)}
                                  className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node ${dragInfo?.player.id === p.id ? 'opacity-20' : ''}`}
                                  style={{ top: `${p.top}%`, left: `${p.left}%` }}>
-                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-black shadow-lg ${p.pos === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                                
+                                <div className={`relative w-12 h-12 rounded-full border-2 flex items-center justify-center font-black shadow-lg ${p.pos === 'GK' ? 'bg-orange-500 border-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
                                     {p.number}
+                                    
+                                    {/* Captain Badge */}
+                                    {captainId === p.id && (
+                                        <div className="absolute -top-2 -left-2 bg-yellow-600 border border-white text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black captain-badge">C</div>
+                                    )}
+
+                                    {/* Info Button */}
+                                    <button onClick={(e) => { e.stopPropagation(); setTooltipPlayer(p); }}
+                                            className="absolute -bottom-1 -right-1 bg-blue-900 text-white w-5 h-5 rounded-full border border-white flex items-center justify-center text-[10px] font-serif italic info-btn">i</button>
                                 </div>
                                 <span className="mt-1 bg-blue-950/90 px-2 py-0.5 rounded text-[9px] font-bold text-white border border-white/10">{p.name}</span>
                             </div>
                         ))}
                     </div>
 
-                    <div ref={benchRef} className="bg-slate-900 p-4 border-t border-white/10 min-h-[140px] z-10">
-                        <p className="text-[10px] font-black text-slate-500 tracking-widest mb-3 uppercase italic">Substitutes (Drag to Pitch)</p>
-                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                    {/* Bench Section */}
+                    <div ref={benchRef} className="bg-slate-900 p-4 border-t border-white/10 min-h-[160px] z-10">
+                        <p className="text-[10px] font-black text-slate-500 tracking-widest mb-3 uppercase italic">Substitutes</p>
+                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
                             {bench.map((p) => (
                                 <div key={p.id} onPointerDown={(e) => handlePointerDown(e, p, true)}
                                      className={`bench-item flex flex-col items-center ${dragInfo?.player.id === p.id ? 'opacity-20' : ''}`}>
-                                    <div className="w-12 h-12 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center text-xs font-black shadow-lg">
+                                    <div className="relative w-12 h-12 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center text-xs font-black shadow-lg mb-1">
                                         {p.number}
+                                        <button onClick={(e) => { e.stopPropagation(); setTooltipPlayer(p); }}
+                                                className="absolute -bottom-1 -right-1 bg-blue-700 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] italic">i</button>
                                     </div>
-                                    <p className="text-[10px] mt-2 font-black text-slate-300 uppercase w-full text-center truncate">{p.name}</p>
-                                    <p className="text-[7px] font-bold text-yellow-600/70 uppercase">{p.native}</p>
+                                    <p className="text-[10px] font-black text-slate-200 uppercase truncate w-full px-1">{p.name}</p>
+                                    <p className="text-[8px] font-bold text-yellow-600 uppercase tracking-tighter">{p.native}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
+
+                    {/* Tooltip Modal */}
+                    {tooltipPlayer && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6" onClick={() => setTooltipPlayer(null)}>
+                            <div className="bg-slate-900 border-2 border-yellow-500 p-6 rounded-3xl w-full max-w-xs text-center shadow-2xl animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                                <h2 className="text-3xl font-black text-yellow-500 uppercase italic leading-none">{tooltipPlayer.name}</h2>
+                                <p className="text-sm text-slate-400 font-bold mt-1 mb-4">#{tooltipPlayer.number} | {tooltipPlayer.native}</p>
+                                <div className="grid grid-cols-3 gap-2 border-y border-white/10 py-5 mb-5">
+                                    <div><p className="text-[10px] text-slate-500 uppercase">Matches</p><p className="text-xl font-black">{tooltipPlayer.mp}</p></div>
+                                    <div><p className="text-[10px] text-slate-500 uppercase">{tooltipPlayer.pos === 'GK' ? 'CS' : 'G'}</p><p className="text-xl font-black text-yellow-500">{tooltipPlayer.pos === 'GK' ? tooltipPlayer.cs : tooltipPlayer.g}</p></div>
+                                    <div><p className="text-[10px] text-slate-500 uppercase">Assists</p><p className="text-xl font-black text-blue-400">{tooltipPlayer.a}</p></div>
+                                </div>
+                                <button onClick={() => setTooltipPlayer(null)} className="w-full bg-yellow-500 text-blue-900 font-black py-3 rounded-xl uppercase tracking-widest text-sm">Close</button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Drag Ghost Overlay */}
                     {dragInfo && (

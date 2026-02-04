@@ -18,14 +18,15 @@
 
         .field-line {
             position: absolute;
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
         }
 
         .center-line {
             top: 50%;
             left: 0;
             width: 100%;
-            height: 2px;
+            height: 3px;
             transform: translateY(-50%);
         }
 
@@ -35,7 +36,8 @@
             left: 50%;
             width: 15%;
             aspect-ratio: 1;
-            border: 2px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             background: transparent;
@@ -54,7 +56,8 @@
 
         .penalty-box {
             position: absolute;
-            border: 2px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
             background: transparent;
         }
 
@@ -76,7 +79,8 @@
 
         .goal-box {
             position: absolute;
-            border: 2px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
             background: transparent;
         }
 
@@ -100,7 +104,8 @@
             position: absolute;
             width: 12%;
             aspect-ratio: 1;
-            border: 2px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             background: transparent;
             left: 50%;
@@ -141,7 +146,8 @@
             position: absolute;
             width: 2%;
             aspect-ratio: 1;
-            border: 2px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             background: transparent;
         }
@@ -176,7 +182,8 @@
             transform: translateX(-50%);
             width: 12%;
             height: 2.5%;
-            border: 2px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
             background: transparent;
         }
 
@@ -284,6 +291,64 @@
             "Custom": null
         };
 
+        const FloatingIcon = ({ setShowSplash }) => {
+            // Position state: default top-left (top: 80px, left: 8px)
+            const [position, setPosition] = useState({ x: 8, y: 80 });
+            const isDragging = React.useRef(false);
+            const dragStart = React.useRef({ x: 0, y: 0 });
+            const startPos = React.useRef({ x: 0, y: 0 });
+
+            const onStart = (clientX, clientY) => {
+                isDragging.current = true;
+                dragStart.current = { x: clientX, y: clientY };
+                startPos.current = { ...position };
+            };
+
+            const onMove = (clientX, clientY) => {
+                if (!isDragging.current) return;
+                const dx = clientX - dragStart.current.x;
+                const dy = clientY - dragStart.current.y;
+                setPosition({
+                    x: Math.max(0, Math.min(window.innerWidth - 70, startPos.current.x + dx)),
+                    y: Math.max(0, Math.min(window.innerHeight - 70, startPos.current.y + dy))
+                });
+            };
+
+            const onEnd = (clientX, clientY) => {
+                // If moved less than 5px, treat as click
+                const dist = Math.sqrt(Math.pow(clientX - dragStart.current.x, 2) + Math.pow(clientY - dragStart.current.y, 2));
+                if (isDragging.current && dist < 5) {
+                    setShowSplash(true);
+                }
+                isDragging.current = false;
+            };
+
+            return (
+                <div
+                    onMouseDown={(e) => onStart(e.clientX, e.clientY)}
+                    onTouchStart={(e) => onStart(e.touches[0].clientX, e.touches[0].clientY)}
+
+                    style={{ top: position.y, left: position.x, touchAction: 'none' }}
+                    className="fixed z-[90] w-16 h-16 rounded-full border-2 border-yellow-500 shadow-xl overflow-hidden cursor-move bg-slate-800 active:scale-95 transition-transform"
+                >
+                    {/* Global event listeners for move/up attached to window would be better, but for simplicity here attaching to document or using overlay */}
+                    {/* Using a self-contained listener effect or event bubbling for simplicity */}
+                    <div className="w-full h-full pointer-events-none">
+                        <img src="./eem-ani.jpg" alt="Eem Ani" className="w-full h-full object-cover opacity-80" />
+                    </div>
+                    {/* Overlay for capturing move events outside the div */}
+                    {isDragging.current && (
+                        <div className="fixed inset-0 z-[100]"
+                            onMouseMove={(e) => onMove(e.clientX, e.clientY)}
+                            onTouchMove={(e) => onMove(e.touches[0].clientX, e.touches[0].clientY)}
+                            onMouseUp={(e) => onEnd(e.clientX, e.clientY)}
+                            onTouchEnd={(e) => onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY)}
+                        ></div>
+                    )}
+                </div>
+            );
+        };
+
         function App() {
             const [formation, setFormation] = useState("4-3-3");
             const [players, setPlayers] = useState(FULL_SQUAD.slice(0, 11).map((p, i) => ({
@@ -378,6 +443,11 @@
                 // e.preventDefault(); // Don't prevent default immediately to allow click/scroll if needed, but handled by touch-action: none for drag items
                 const touch = e.touches[0];
                 const element = e.currentTarget;
+                const rect = element.getBoundingClientRect();
+
+                // Calculate offset from center of element to touch point
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
 
                 // Store initial state
                 touchDragItem.current = {
@@ -386,6 +456,8 @@
                     element,
                     startX: touch.clientX,
                     startY: touch.clientY,
+                    offsetX: touch.clientX - centerX,
+                    offsetY: touch.clientY - centerY,
                     originalZIndex: element.style.zIndex,
                     originalTransition: element.style.transition
                 };
@@ -413,7 +485,7 @@
             const onTouchEnd = (e) => {
                 if (!touchDragItem.current) return;
 
-                const { element, originalZIndex, originalTransition } = touchDragItem.current;
+                const { element, originalZIndex, originalTransition, offsetX, offsetY } = touchDragItem.current;
 
                 // Reset styles
                 element.style.transform = '';
@@ -439,11 +511,11 @@
                             handleDropLogic(targetIndex, targetSource);
                         } else {
                             // Maybe dropped on empty field?
-                            handleFieldTouchDrop(touch.clientX, touch.clientY);
+                            handleFieldTouchDrop(touch.clientX - offsetX, touch.clientY - offsetY);
                         }
                     } else if (targetElement.closest('.pitch-pattern')) {
                         // Dropped on empty field logic
-                        handleFieldTouchDrop(touch.clientX, touch.clientY);
+                        handleFieldTouchDrop(touch.clientX - offsetX, touch.clientY - offsetY);
                     }
                 }
 

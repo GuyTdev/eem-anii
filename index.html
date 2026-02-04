@@ -294,6 +294,7 @@
             const [dragInfo, setDragInfo] = useState(null);
             const [selectedPlayer, setSelectedPlayer] = useState(null);
             const [isDragging, setIsDragging] = useState(null); // {playerIndex, startPos}
+            const [showSplash, setShowSplash] = useState(true);
             const fieldRef = React.useRef(null);
 
             // Unified Drag & Drop Handler (Mouse & Touch)
@@ -458,11 +459,13 @@
                 const x = Math.max(5, Math.min(95, ((clientX - rect.left) / rect.width) * 100));
                 const y = Math.max(5, Math.min(95, ((clientY - rect.top) / rect.height) * 100));
 
+                // Capture index locally to avoid race condition with null ref inside setState
+                const draggedIndex = touchDragItem.current.index;
+
                 setPlayers(prev => {
                     const newP = [...prev];
-                    const idx = touchDragItem.current.index;
-                    if (newP[idx]) {
-                        newP[idx] = { ...newP[idx], top: y, left: x };
+                    if (newP[draggedIndex]) {
+                        newP[draggedIndex] = { ...newP[draggedIndex], top: y, left: x };
                     }
                     return newP;
                 });
@@ -671,8 +674,24 @@
                             </div>
                         </>
                     )}
-                    {/* Floating Side Image */}
-                    <img src="./bonboni.jpg" alt="Bonboni" className="fixed bottom-4 left-4 w-32 rounded-xl shadow-2xl border-4 border-yellow-500 z-[100] transform -rotate-6 hover:scale-110 transition-transform cursor-pointer" />
+                    {/* Floating Side Image / Splash Toggle */}
+                    {!showSplash && (
+                        <button onClick={() => setShowSplash(true)}
+                            className="fixed bottom-4 left-4 z-[100] bg-yellow-500 text-blue-900 border-4 border-blue-900 px-4 py-2 rounded-xl shadow-2xl font-black italic transform -rotate-6 hover:scale-110 transition-transform text-lg">
+                            EEM ANI PRO
+                        </button>
+                    )}
+
+                    {/* Splash Screen */}
+                    {showSplash && (
+                        <div onClick={() => setShowSplash(false)} className="fixed inset-0 z-[2000] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer animate-fade-in">
+                            <div className="text-center animate-bounce-slow">
+                                <h1 className="text-6xl font-black italic text-yellow-500 tracking-tighter drop-shadow-2xl mb-2">EEM ANII</h1>
+                                <p className="text-blue-200 text-xl font-bold tracking-widest uppercase">Maccabi Tel Aviv 2026</p>
+                                <p className="mt-8 text-sm text-slate-400 animate-pulse">Tap anywhere to start</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }

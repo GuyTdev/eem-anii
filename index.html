@@ -248,6 +248,14 @@
         .bench-scroll::-webkit-scrollbar-thumb:hover {
             background: #ca8a04;
         }
+
+        .bench-scroll {
+            transform: rotateX(180deg);
+        }
+
+        .bench-scroll>* {
+            transform: rotateX(180deg);
+        }
     </style>
 </head>
 
@@ -308,8 +316,11 @@
         };
 
         const FloatingIcon = ({ setShowSplash }) => {
-            // Position state: default top-left (top: 80px, left: 8px)
-            const [position, setPosition] = useState({ x: 8, y: 80 });
+            // Position state: default bottom-right
+            const [position, setPosition] = useState({
+                x: window.innerWidth - 80,
+                y: window.innerHeight - 200
+            });
             const isDragging = React.useRef(false);
             const dragStart = React.useRef({ x: 0, y: 0 });
             const startPos = React.useRef({ x: 0, y: 0 });
@@ -785,13 +796,8 @@
                             </div>
                         </>
                     )}
-                    {/* Floating Side Image / Splash Toggle */}
-                    {!showSplash && (
-                        <div onClick={() => setShowSplash(true)}
-                            className="fixed top-20 left-2 z-[90] w-16 h-16 rounded-full border-2 border-yellow-500 shadow-xl overflow-hidden cursor-pointer hover:scale-110 transition-transform bg-slate-800">
-                            <img src="./eem-ani.jpg" alt="Eem Ani" className="w-full h-full object-cover opacity-80 hover:opacity-100" />
-                        </div>
-                    )}
+                    {/* Floating App Icon / Splash Toggle */}
+                    {!showSplash && <FloatingIcon setShowSplash={setShowSplash} />}
 
                     {/* Splash Screen */}
                     {showSplash && (

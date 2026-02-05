@@ -691,9 +691,8 @@
                     </div>
 
                     {/* Bench Area - Optimized for Mobile Visibility */}
-                    <div className="bg-slate-800 p-3 flex-[2] border-t border-slate-700 min-h-0 flex flex-col">
-                        <h2 className="text-[10px] uppercase text-slate-400 font-bold mb-2">Bench</h2>
-                        <div className="flex gap-4 overflow-x-auto pb-4 bench-scroll">
+                    <div className="bg-slate-800 px-3 pt-3 pb-1 flex-[2] border-t border-slate-700 min-h-0 flex flex-col relative">
+                        <div className="flex gap-4 overflow-x-auto pb-8 bench-scroll">
                             {bench.map((p, i) => (
                                 <div key={p.id}
                                     draggable
@@ -717,6 +716,9 @@
                                     <p className="text-[7px] text-slate-500 uppercase">{p.native}</p>
                                 </div>
                             ))}
+                        </div>
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-0 pointer-events-none opacity-20">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.3em]">Substitute Bench</span>
                         </div>
                     </div>
 

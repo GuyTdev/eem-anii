@@ -242,34 +242,38 @@
         // FULL 2026 SQUAD DATA - Ligat Ha'Al 2025-26 season stats only
         const FULL_SQUAD = [
             // Starting 11 (vs Kiryat Shmona 02/02/2026) - Confirmed - Fixed Sides
-            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 16, cs: 6 },
-            { id: 3, name: "Revivo", number: 3, pos: "DF", native: "LB", mp: 16, g: 0, a: 4 }, // Left Back
-            { id: 6, name: "Asante", number: 6, pos: "DF", native: "CB", mp: 8, g: 0, a: 0 },
-            { id: 4, name: "Heitor", number: 4, pos: "DF", native: "CB", mp: 10, g: 1, a: 0 },
-            { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 4, g: 0, a: 0 }, // Right Back
-            { id: 42, name: "Dor Peretz", number: 42, pos: "MF", native: "CM", mp: 18, g: 10, a: 2 },
-            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CAM", mp: 18, g: 2, a: 0 },
-            { id: 10, name: "Andrade", number: 10, pos: "MF", native: "CAM", mp: 14, g: 1, a: 0 },
-            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 16, g: 0, a: 1 }, // Left Wing
-            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 12, g: 2, a: 0 },
-            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 19, g: 1, a: 2 }, // Right Wing
+            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 16, cs: 6, strength: "Reflexes 82" },
+
+            { id: 3, name: "Revivo", number: 3, pos: "DF", native: "LB", mp: 16, g: 0, a: 4, strength: "Crossing 85" },
+            { id: 6, name: "Asante", number: 6, pos: "DF", native: "CB", mp: 8, g: 0, a: 0, strength: "Strength 84" },
+            { id: 4, name: "Heitor", number: 4, pos: "DF", native: "CB", mp: 10, g: 1, a: 0, strength: "Aerial Duels 83" },
+            { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 4, g: 0, a: 0, strength: "Defensive Positioning 80" },
+
+            { id: 42, name: "Dor Peretz", number: 42, pos: "MF", native: "CM", mp: 18, g: 10, a: 2, strength: "Late Runs Into Box 88" },
+            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CAM", mp: 18, g: 2, a: 0, strength: "Vision 82" },
+            { id: 10, name: "Andrade", number: 10, pos: "MF", native: "CAM", mp: 14, g: 1, a: 0, strength: "Dribbling 84" },
+
+            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 16, g: 0, a: 1, strength: "Acceleration 86" },
+            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 12, g: 2, a: 0, strength: "Finishing 81" },
+            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 19, g: 1, a: 2, strength: "Pace 89" },
+
             // Bench / Full Squad
-            { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 3, cs: 1 },
-            { id: 28, name: "Sissokho", number: 28, pos: "MF", native: "CDM", mp: 13, g: 0, a: 1 },
-            { id: 36, name: "Ido Shahar", number: 36, pos: "MF", native: "CM", mp: 16, g: 9, a: 2 },
-            { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 18, g: 3, a: 4, status: 'red-card' },
-            { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 16, g: 3, a: 1, status: 'yellow-card' },
-            { id: 41, name: "Ben Hamo", number: 41, pos: "DF", native: "CB", mp: 5, g: 0, a: 0 },
-            { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 0, a: 0, status: 'injured' }, // Injured
-            { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 12, g: 0, a: 1 }, // Returning?
-            { id: 14, name: "Gropper", number: 14, pos: "DF", native: "LB", mp: 6, g: 0, a: 0, status: 'injured' }, // Injured (ACL)
-            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 0, status: 'injured' }, // Injured (Cheekbone)
-            { id: 23, name: "Lederman", number: 23, pos: "MF", native: "CDM", mp: 6, g: 0, a: 0, status: 'yellow-card' },
-            { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 9, g: 2, a: 1, status: 'injured' }, // Injured (ACL)
-            { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 8, g: 0, a: 0 },
-            { id: 60, name: "Ben Simon", number: 60, pos: "FW", native: "ST", mp: 3, g: 0, a: 0 },
-            { id: 8, name: "Sahiti", number: 8, pos: "MF", native: "RM", mp: 5, g: 0, a: 0 },
-            { id: 27, name: "Magor", number: 27, pos: "FW", native: "LW", mp: 4, g: 0, a: 0 }
+            { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 3, cs: 1, strength: "Handling 79" },
+            { id: 28, name: "Sissokho", number: 28, pos: "MF", native: "CDM", mp: 13, g: 0, a: 1, strength: "Interceptions 84" },
+            { id: 36, name: "Ido Shahar", number: 36, pos: "MF", native: "CM", mp: 16, g: 9, a: 2, strength: "Long Shots 87" },
+            { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 18, g: 3, a: 4, status: 'red-card', strength: "Creativity 85" },
+            { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 16, g: 3, a: 1, status: 'yellow-card', strength: "Off‑Ball Movement 82" },
+            { id: 41, name: "Ben Hamo", number: 41, pos: "DF", native: "CB", mp: 5, g: 0, a: 0, strength: "Tackling 80" },
+            { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 0, a: 0, status: 'injured', strength: "Aggression 83" },
+            { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 12, g: 0, a: 1, strength: "Marking 82" },
+            { id: 14, name: "Gropper", number: 14, pos: "DF", native: "LB", mp: 6, g: 0, a: 0, status: 'injured', strength: "Stamina 81" },
+            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 0, status: 'injured', strength: "Ball Winning 83" },
+            { id: 23, name: "Lederman", number: 23, pos: "MF", native: "CDM", mp: 6, g: 0, a: 0, status: 'yellow-card', strength: "Short Passing 80" },
+            { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 9, g: 2, a: 1, status: 'injured', strength: "Finishing 84" },
+            { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 8, g: 0, a: 0, strength: "Pace 84" },
+            { id: 60, name: "Ben Simon", number: 60, pos: "FW", native: "ST", mp: 3, g: 0, a: 0, strength: "Heading 78" },
+            { id: 8, name: "Sahiti", number: 8, pos: "MF", native: "RM", mp: 5, g: 0, a: 0, strength: "Work Rate 82" },
+            { id: 27, name: "Magor", number: 27, pos: "FW", native: "LW", mp: 4, g: 0, a: 0, strength: "Dribbling 80" }
         ];
 
         // ... (skipping FORMATIONS) ...
@@ -755,10 +759,7 @@
                                     <div className="bg-blue-50 p-3 rounded-xl border-l-4 border-blue-500">
                                         <p className="text-[9px] font-bold text-blue-700 uppercase tracking-wide mb-1">Strength</p>
                                         <p className="text-xs font-bold text-blue-900">
-                                            {selectedPlayer.native === 'GK' ? 'Reliable Shot Stopper' :
-                                                selectedPlayer.pos === 'DF' ? 'Defensive Rock' :
-                                                    selectedPlayer.pos === 'MF' ? 'Creative Engine' :
-                                                        'Clinical Finisher'}
+                                            {selectedPlayer.strength || 'Key Player'}
                                         </p>
                                     </div>
                                 </div>

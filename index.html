@@ -9,12 +9,39 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .pitch-pattern {
-            background-color: #15803d;
-            background-image: linear-gradient(#166534 50%, transparent 50%);
-            background-size: 100% 10%;
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Barlow Condensed"', 'sans-serif'],
+                    },
+                    colors: {
+                        'maccabi-blue': '#1e3a8a',
+                        'maccabi-yellow': '#facc15',
+                    }
+                }
+            }
         }
+    </script>
+    <style>
+        body {
+            font-family: 'Barlow Condensed', sans-serif;
+        }
+
+        /* Realistic Pitch Pattern */
+        .pitch-pattern {
+            background-color: #1a6d2f;
+            background-image:
+                linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
+        }
+
 
         .field-line {
             position: absolute;
@@ -256,16 +283,37 @@
         .bench-scroll>* {
             transform: rotateX(180deg);
         }
+
+        @keyframes pulse-gold {
+            0% {
+                box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+                border-color: #facc15;
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(234, 179, 8, 0);
+                border-color: #facc15;
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
+            }
+        }
+
+        .drop-target-active {
+            animation: pulse-gold 1.5s infinite;
+            z-index: 40 !important;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 
-<body class="bg-slate-900 text-white font-sans overflow-hidden">
+<body
+    class="bg-slate-950 text-white font-sans overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState } = React;
-
-        // FULL 2026 SQUAD DATA - Ligat Ha'Al 2025-26 season stats only
         // FULL 2026 SQUAD DATA - Ligat Ha'Al 2025-26 season stats only
         const FULL_SQUAD = [
             // Starting 11 (vs Kiryat Shmona 02/02/2026) - Confirmed - Fixed Sides
@@ -277,12 +325,12 @@
             { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 4, g: 0, a: 0, strength: "Defensive Positioning 80" },
 
             { id: 42, name: "Dor Peretz", number: 42, pos: "MF", native: "CM", mp: 18, g: 10, a: 2, strength: "Late Runs Into Box 88" },
-            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CAM", mp: 18, g: 2, a: 0, strength: "Vision 82" },
+            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CAM", mp: 18, g: 2, a: 2, strength: "Vision 82" },
             { id: 10, name: "Andrade", number: 10, pos: "MF", native: "CAM", mp: 14, g: 1, a: 0, strength: "Dribbling 84" },
 
-            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 16, g: 0, a: 1, strength: "Acceleration 86" },
-            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 12, g: 2, a: 0, strength: "Finishing 81" },
-            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 19, g: 1, a: 2, strength: "Pace 89" },
+            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 16, g: 0, a: 2, strength: "Acceleration 86" },
+            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 12, g: 3, a: 1, strength: "Finishing 81" },
+            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 19, g: 2, a: 2, strength: "Pace 89" },
 
             // Bench / Full Squad
             { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 3, cs: 1, strength: "Handling 79" },
@@ -291,10 +339,10 @@
             { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 18, g: 3, a: 4, status: 'red-card', strength: "Creativity 85" },
             { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 16, g: 3, a: 1, status: 'yellow-card', strength: "Off‑Ball Movement 82" },
             { id: 41, name: "Ben Hamo", number: 41, pos: "DF", native: "CB", mp: 5, g: 0, a: 0, strength: "Tackling 80" },
-            { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 0, a: 0, status: 'injured', strength: "Aggression 83" },
+            { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 1, a: 0, status: 'injured', strength: "Aggression 83" },
             { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 12, g: 0, a: 1, strength: "Marking 82" },
             { id: 14, name: "Gropper", number: 14, pos: "DF", native: "LB", mp: 6, g: 0, a: 0, status: 'injured', strength: "Stamina 81" },
-            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 0, status: 'injured', strength: "Ball Winning 83" },
+            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 1, status: 'injured', strength: "Ball Winning 83" },
             { id: 23, name: "Lederman", number: 23, pos: "MF", native: "CDM", mp: 6, g: 0, a: 0, status: 'yellow-card', strength: "Short Passing 80" },
             { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 9, g: 2, a: 1, status: 'injured', strength: "Finishing 84" },
             { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 8, g: 0, a: 0, strength: "Pace 84" },
@@ -594,9 +642,9 @@
                         onDrop={onFieldDrop}
                         className="relative flex-[7] pitch-pattern m-2 border-2 border-white overflow-hidden shadow-inner flex flex-col">
 
-                        {/* Floating Controls */}
+                        {/* Floating Controls - Glassmorphism */}
                         <div className="absolute top-2 right-2 z-[60] flex flex-col gap-2 items-end">
-                            <select className="bg-blue-900/90 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none border border-yellow-500/50 backdrop-blur-sm"
+                            <select className="bg-black/40 text-white text-[12px] px-4 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg uppercase tracking-wider"
                                 value={formation} onChange={(e) => {
                                     const f = e.target.value;
                                     setFormation(f);
@@ -616,8 +664,8 @@
                                     setBench(FULL_SQUAD.slice(11));
                                 }
                             }}
-                                className="bg-blue-900/90 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none border border-yellow-500/50 backdrop-blur-sm hover:bg-blue-800 transition-colors">
-                                ↻ Reset
+                                className="bg-black/40 text-white text-[12px] px-4 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all uppercase tracking-wider">
+                                ↺ Reset
                             </button>
                         </div>
 
@@ -660,7 +708,10 @@
                                 data-source="field"
                                 onClick={(e) => { e.stopPropagation(); setSelectedPlayer(p); }}
                                 onDoubleClick={(e) => { e.stopPropagation(); setCaptainId(p.id); }}
-                                className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node cursor-grab ${isDragging?.playerIndex === i ? 'dragging' : ''}`}
+                                className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center player-node cursor-grab active:cursor-grabbing transition-all duration-200 
+                                    ${isDragging?.playerIndex === i && isDragging?.source === 'field' ? 'dragging opacity-50 scale-110 z-50' : ''}
+                                    ${isDragging && (isDragging.playerIndex !== i || isDragging.source !== 'field') ? 'drop-target-active' : ''}
+                                `}
                                 style={{ top: `${p.top}%`, left: `${p.left}%` }}>
 
                                 <div className={`relative w-12 h-12 rounded-full border-2 shadow-2xl flex items-center justify-center font-black text-sm
@@ -691,8 +742,8 @@
                     </div>
 
                     {/* Bench Area - Optimized for Mobile Visibility */}
-                    <div className="bg-slate-800 px-3 pt-3 pb-1 flex-[2] border-t border-slate-700 min-h-0 flex flex-col relative">
-                        <div className="flex gap-4 overflow-x-auto pb-8 bench-scroll">
+                    <div className="bg-slate-900/80 backdrop-blur-md px-4 pt-4 pb-6 flex-[2] border-t border-white/10 min-h-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
+                        <div className="flex gap-4 overflow-x-auto pb-4 bench-scroll items-center h-full">
                             {bench.map((p, i) => (
                                 <div key={p.id}
                                     draggable
@@ -707,92 +758,97 @@
                                     data-source="bench"
                                     style={{ touchAction: 'none' }}
                                     onClick={() => setSelectedPlayer(p)}
-                                    className="flex-shrink-0 flex flex-col items-center cursor-grab">
-                                    <div className="relative w-11 h-11 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-[10px] font-black">
+                                    className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group
+                                        ${isDragging?.playerIndex === i && isDragging?.source === 'bench' ? 'opacity-50' : ''}
+                                        ${isDragging && (isDragging.playerIndex !== i || isDragging.source !== 'bench') ? 'drop-target-active rounded-xl bg-slate-800/50' : ''}
+                                    `}>
+                                    <div className="relative w-14 h-14 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-lg font-black shadow-lg group-hover:border-yellow-500 transition-colors">
                                         {p.number}
-                                        {captainId === p.id && <span className="absolute -top-1 -right-1 bg-white text-blue-900 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-black">C</span>}
+                                        {captainId === p.id && <span className="absolute -top-1 -right-1 bg-yellow-500 text-blue-900 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-slate-800">C</span>}
                                     </div>
-                                    <p className="text-[9px] mt-1.5 text-slate-300 font-bold">{p.name}</p>
-                                    <p className="text-[7px] text-slate-500 uppercase">{p.native}</p>
+                                    <p className="text-[11px] mt-2 text-slate-300 font-bold tracking-tight">{p.name}</p>
+                                    <p className="text-[9px] text-slate-500 uppercase tracking-widest">{p.native}</p>
                                 </div>
                             ))}
                         </div>
-                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-0 pointer-events-none opacity-20">
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.3em]">Substitute Bench</span>
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-0 pointer-events-none opacity-30">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.4em]">Substitutes</span>
                         </div>
                     </div>
 
-                    {/* Player Tooltip */}
+                    {/* Player Tooltip / Bottom Sheet */}
                     {selectedPlayer && (
                         <>
-                            <div className="absolute inset-0 z-[90]" onClick={() => setSelectedPlayer(null)}></div>
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-slate-900 rounded-2xl p-5 shadow-2xl z-[100] w-72 max-w-[90vw] border-4 border-yellow-500">
-                                <div className="flex justify-between items-start mb-4">
+                            <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedPlayer(null)}></div>
+                            <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white text-slate-900 rounded-t-3xl p-6 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] animate-slide-up md:absolute md:top-1/2 md:left-1/2 md:bottom-auto md:w-80 md:rounded-2xl md:-translate-x-1/2 md:-translate-y-1/2 md:shadow-2xl">
+                                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full md:hidden"></div>
+                                <div className="flex justify-between items-start mb-6 mt-2 md:mt-0">
                                     <div>
-                                        <h3 className="text-2xl font-black text-blue-900 uppercase leading-none">{selectedPlayer.name}</h3>
-                                        <p className="text-xs font-bold text-slate-400 mt-1 uppercase">{selectedPlayer.native} • #{selectedPlayer.number}</p>
+                                        <h3 className="text-4xl font-black text-blue-900 uppercase leading-none italic tracking-tighter">{selectedPlayer.name}</h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="bg-blue-900 text-white text-xs font-bold px-2 py-0.5 rounded md:text-sm">{selectedPlayer.native}</span>
+                                            <span className="text-xl font-bold text-slate-300">#{selectedPlayer.number}</span>
+                                        </div>
                                     </div>
                                     <button onClick={(e) => { e.stopPropagation(); setCaptainId(selectedPlayer.id); }}
-                                        className={`text-[9px] font-black px-3 py-1.5 rounded-full border-2 transition-all ${captainId === selectedPlayer.id ? 'bg-yellow-500 border-yellow-500 text-blue-900' : 'border-blue-900 text-blue-900'}`}>
-                                        {captainId === selectedPlayer.id ? '★ C' : 'C'}
+                                        className={`text-sm font-black px-4 py-2 rounded-full border-2 transition-all uppercase tracking-wider ${captainId === selectedPlayer.id ? 'bg-yellow-500 border-yellow-500 text-blue-900 shadow-lg' : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
+                                        {captainId === selectedPlayer.id ? '★ Captain' : 'Make Captain'}
                                     </button>
                                 </div>
 
-                                <div className={`grid ${selectedPlayer.native === 'GK' ? 'grid-cols-2' : 'grid-cols-3'} gap-2 mb-3`}>
-                                    <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-yellow-500 text-center">
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Matches</p>
-                                        <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.mp || '-'}</p>
+                                <div className={`grid ${selectedPlayer.native === 'GK' ? 'grid-cols-2' : 'grid-cols-3'} gap-3 mb-6`}>
+                                    <div className="bg-slate-50 p-3 rounded-2xl border-b-4 border-yellow-500 text-center shadow-sm">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Matches</p>
+                                        <p className="text-3xl font-black text-blue-900 mt-1">{selectedPlayer.mp || '-'}</p>
                                     </div>
                                     {selectedPlayer.native === 'GK' ? (
-                                        <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-blue-900 text-center">
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Clean Sheets</p>
-                                            <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.cs || '-'}</p>
+                                        <div className="bg-slate-50 p-3 rounded-2xl border-b-4 border-blue-900 text-center shadow-sm">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Clean Sheets</p>
+                                            <p className="text-3xl font-black text-blue-900 mt-1">{selectedPlayer.cs || '-'}</p>
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-green-500 text-center">
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Goals</p>
-                                                <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.g || 0}</p>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border-b-4 border-green-500 text-center shadow-sm">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Goals</p>
+                                                <p className="text-3xl font-black text-blue-900 mt-1">{selectedPlayer.g || 0}</p>
                                             </div>
-                                            <div className="bg-slate-50 p-3 rounded-xl border-b-4 border-blue-900 text-center">
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Assists</p>
-                                                <p className="text-2xl font-black text-blue-900 mt-0.5">{selectedPlayer.a || 0}</p>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border-b-4 border-blue-900 text-center shadow-sm">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assists</p>
+                                                <p className="text-3xl font-black text-blue-900 mt-1">{selectedPlayer.a || 0}</p>
                                             </div>
                                         </>
                                     )}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <div className={`p-3 rounded-xl border-l-4 ${selectedPlayer.status === 'injured' ? 'bg-red-50 border-red-500' :
+                                <div className="space-y-3">
+                                    <div className={`p-4 rounded-xl border-l-4 shadow-sm flex items-center justify-between ${selectedPlayer.status === 'injured' ? 'bg-red-50 border-red-500' :
                                         selectedPlayer.status === 'yellow-card' || selectedPlayer.status === 'red-card' ? 'bg-orange-50 border-orange-500' :
                                             'bg-green-50 border-green-500'
                                         }`}>
-                                        <p className={`text-[9px] font-bold uppercase tracking-wide mb-1 ${selectedPlayer.status === 'injured' ? 'text-red-700' :
-                                            selectedPlayer.status === 'yellow-card' || selectedPlayer.status === 'red-card' ? 'text-orange-700' :
-                                                'text-green-700'
-                                            }`}>Condition</p>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3">
                                             {selectedPlayer.status === 'yellow-card' && (
-                                                <div className="w-3 h-4 bg-yellow-400 border border-white/50 rounded-sm"></div>
+                                                <div className="w-4 h-5 bg-yellow-400 border border-white/50 rounded-sm shadow-sm"></div>
                                             )}
                                             {selectedPlayer.status === 'red-card' && (
-                                                <div className="w-3 h-4 bg-red-600 border border-white/50 rounded-sm"></div>
+                                                <div className="w-4 h-5 bg-red-600 border border-white/50 rounded-sm shadow-sm"></div>
                                             )}
-                                            <p className={`text-sm font-black ${selectedPlayer.status === 'injured' ? 'text-red-900' :
+                                            {selectedPlayer.status === 'injured' && (
+                                                <span className="text-lg">🚑</span>
+                                            )}
+                                            <span className={`text-lg font-black uppercase tracking-tight ${selectedPlayer.status === 'injured' ? 'text-red-900' :
                                                 selectedPlayer.status === 'yellow-card' || selectedPlayer.status === 'red-card' ? 'text-orange-900' :
                                                     'text-green-900'
                                                 }`}>
                                                 {selectedPlayer.status === 'injured' ? 'Injured' :
                                                     selectedPlayer.status === 'yellow-card' || selectedPlayer.status === 'red-card' ? 'Suspended' :
-                                                        'Ready'}
-                                            </p>
+                                                        'Available'}
+                                            </span>
                                         </div>
+                                        <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest">Condition</p>
                                     </div>
-                                    <div className="bg-blue-50 p-3 rounded-xl border-l-4 border-blue-500">
-                                        <p className="text-[9px] font-bold text-blue-700 uppercase tracking-wide mb-1">Strength</p>
-                                        <p className="text-xs font-bold text-blue-900">
-                                            {selectedPlayer.strength || 'Key Player'}
-                                        </p>
+                                    <div className="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm flex justify-between items-center">
+                                        <span className="text-sm font-bold text-blue-900 uppercase">{selectedPlayer.strength || 'Key Player'}</span>
+                                        <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Strength</p>
                                     </div>
                                 </div>
                             </div>

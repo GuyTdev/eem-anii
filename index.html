@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <link
         href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap"
         rel="stylesheet">
@@ -436,8 +436,8 @@
             const [selectedPlayer, setSelectedPlayer] = useState(null);
             const [isDragging, setIsDragging] = useState(null); // {playerIndex, startPos}
             const [showSplash, setShowSplash] = useState(true);
-            const [benchFilter, setBenchFilter] = useState('ALL');
             const fieldRef = React.useRef(null);
+
 
             // Unified Drag & Drop Handler (Mouse & Touch)
             const dragItemRef = React.useRef(null); // { index, source, element, startX, startY, initialLeft, initialTop }
@@ -600,55 +600,6 @@
                 touchDragItem.current = null;
             };
 
-            // Share Processing State
-            const [isSharing, setIsSharing] = useState(false);
-
-            const captureSquad = async () => {
-                setIsSharing(true);
-                // Slight delay to allow UI to update (spinner etc if we had one)
-                await new Promise(r => setTimeout(r, 100));
-
-                try {
-                    const canvas = await html2canvas(document.body, {
-                        useCORS: true,
-                        backgroundColor: '#0f172a', // Ensure background isn't transparent
-                        scale: 2, // Retine quality
-                        logging: false,
-                        ignoreElements: (element) => {
-                            // Ignore controls during screenshot
-                            return element.classList.contains('no-share');
-                        }
-                    });
-
-                    canvas.toBlob(async (blob) => {
-                        const file = new File([blob], "maccabi-tlv-squad.png", { type: "image/png" });
-
-                        // 1. Try Native Share (Mobile)
-                        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                            try {
-                                await navigator.share({
-                                    files: [file],
-                                    title: 'My Maccabi TLV Squad',
-                                    text: 'Check out my lineup! #EemAnii'
-                                });
-                            } catch (error) {
-                                console.log('Share failed', error);
-                            }
-                        } else {
-                            // 2. Fallback to Download (Desktop)
-                            const link = document.createElement('a');
-                            link.download = 'maccabi-tlv-squad.png';
-                            link.href = canvas.toDataURL();
-                            link.click();
-                        }
-                        setIsSharing(false);
-                    });
-                } catch (err) {
-                    console.error("Screenshot failed", err);
-                    alert("Could not create image. Please try again.");
-                    setIsSharing(false);
-                }
-            };
 
             // Handle dropping on empty field (Move player)
             const handleFieldTouchDrop = (clientX, clientY) => {
@@ -695,7 +646,7 @@
                         className="relative flex-[7] pitch-pattern m-2 border-2 border-white overflow-hidden shadow-inner flex flex-col">
 
                         {/* Floating Controls - Glassmorphism */}
-                        <div className="absolute top-2 right-2 z-[60] flex flex-col gap-2 items-end no-share">
+                        <div className="absolute top-2 right-2 z-[60] flex flex-col gap-2 items-end">
                             <select className="bg-black/40 text-white text-[12px] px-4 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg uppercase tracking-wider"
                                 value={formation} onChange={(e) => {
                                     const f = e.target.value;
@@ -706,26 +657,19 @@
                                 }}>
                                 {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
                             </select>
-
-                            <div className="flex gap-2">
-                                <button onClick={captureSquad} disabled={isSharing}
-                                    className="bg-yellow-500 text-blue-900 text-[12px] px-4 py-2 rounded-full font-black outline-none border border-yellow-400 shadow-lg hover:bg-yellow-400 transition-all uppercase tracking-wider flex items-center gap-1 active:scale-95">
-                                    {isSharing ? '...' : 'Share'}
-                                </button>
-                                <button onClick={() => {
-                                    const confirmed = confirm('Reset squad to default 2026 roster?');
-                                    if (confirmed) {
-                                        setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
-                                            ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
-                                            left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
-                                        })));
-                                        setBench(FULL_SQUAD.slice(11));
-                                    }
-                                }}
-                                    className="bg-black/40 text-white text-[12px] px-3 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all uppercase tracking-wider">
-                                    ↺
-                                </button>
-                            </div>
+                            <button onClick={() => {
+                                const confirmed = confirm('Reset squad to default 2026 roster?');
+                                if (confirmed) {
+                                    setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
+                                        ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
+                                        left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
+                                    })));
+                                    setBench(FULL_SQUAD.slice(11));
+                                }
+                            }}
+                                className="bg-black/40 text-white text-[12px] px-4 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all uppercase tracking-wider">
+                                ↺ Reset
+                            </button>
                         </div>
 
                         {/* App Title Overlay (since header is gone) */}
@@ -801,51 +745,34 @@
                     </div>
 
                     {/* Bench Area - Optimized for Mobile Visibility */}
-                    <div className="bg-slate-900/80 backdrop-blur-md px-4 pt-2 pb-6 flex-[2] border-t border-white/10 min-h-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
-                        {/* Filters */}
-                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
-                            {['ALL', 'GK', 'DF', 'MF', 'FW'].map(type => (
-                                <button key={type}
-                                    onClick={() => setBenchFilter(type)}
-                                    className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-colors whitespace-nowrap
-                                        ${benchFilter === type ? 'bg-yellow-500 border-yellow-500 text-blue-900' : 'bg-transparent border-slate-600 text-slate-400 hover:border-slate-400'}`}>
-                                    {type}
-                                </button>
-                            ))}
-                        </div>
-
+                    <div className="bg-slate-900/80 backdrop-blur-md px-4 pt-4 pb-6 flex-[2] border-t border-white/10 min-h-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
                         <div className="flex gap-4 overflow-x-auto pb-4 bench-scroll items-center h-full">
-                            {bench.map((p, i) => {
-                                // Filter Logic - Only show if matches filter or is currently being dragged from bench
-                                if (benchFilter !== 'ALL' && p.pos !== benchFilter && !(isDragging?.source === 'bench' && isDragging?.playerIndex === i)) return null;
-
-                                return (
-                                    <div key={p.id}
-                                        draggable
-                                        onDragStart={(e) => onDragStart(e, i, 'bench')}
-                                        onDragOver={onDragOver}
-                                        onDrop={(e) => onDrop(e, i, 'bench')}
-                                        onTouchStart={(e) => onTouchStart(e, i, 'bench')}
-                                        onTouchMove={onTouchMove}
-                                        onTouchEnd={onTouchEnd}
-                                        data-droptarget="true"
-                                        data-index={i}
-                                        data-source="bench"
-                                        style={{ touchAction: 'none' }}
-                                        onClick={() => setSelectedPlayer(p)}
-                                        className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group
+                            {bench.map((p, i) => (
+                                <div key={p.id}
+                                    draggable
+                                    onDragStart={(e) => onDragStart(e, i, 'bench')}
+                                    onDragOver={onDragOver}
+                                    onDrop={(e) => onDrop(e, i, 'bench')}
+                                    onTouchStart={(e) => onTouchStart(e, i, 'bench')}
+                                    onTouchMove={onTouchMove}
+                                    onTouchEnd={onTouchEnd}
+                                    data-droptarget="true"
+                                    data-index={i}
+                                    data-source="bench"
+                                    style={{ touchAction: 'none' }}
+                                    onClick={() => setSelectedPlayer(p)}
+                                    className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group
                                         ${isDragging?.playerIndex === i && isDragging?.source === 'bench' ? 'opacity-50' : ''}
                                         ${isDragging && (isDragging.playerIndex !== i || isDragging.source !== 'bench') ? 'drop-target-active rounded-xl bg-slate-800/50' : ''}
                                     `}>
-                                        <div className="relative w-14 h-14 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-lg font-black shadow-lg group-hover:border-yellow-500 transition-colors">
-                                            {p.number}
-                                            {captainId === p.id && <span className="absolute -top-1 -right-1 bg-yellow-500 text-blue-900 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-slate-800">C</span>}
-                                        </div>
-                                        <p className="text-[11px] mt-2 text-slate-300 font-bold tracking-tight">{p.name}</p>
-                                        <p className="text-[9px] text-slate-500 uppercase tracking-widest">{p.native}</p>
+                                    <div className="relative w-14 h-14 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-lg font-black shadow-lg group-hover:border-yellow-500 transition-colors">
+                                        {p.number}
+                                        {captainId === p.id && <span className="absolute -top-1 -right-1 bg-yellow-500 text-blue-900 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-slate-800">C</span>}
                                     </div>
-                                );
-                            })}
+                                    <p className="text-[11px] mt-2 text-slate-300 font-bold tracking-tight">{p.name}</p>
+                                    <p className="text-[9px] text-slate-500 uppercase tracking-widest">{p.native}</p>
+                                </div>
+                            ))}
                         </div>
                         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-0 pointer-events-none opacity-30">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.4em]">Substitutes</span>

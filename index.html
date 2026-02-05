@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap"
@@ -394,7 +395,8 @@
                 // If moved less than 5px, treat as click
                 const dist = Math.sqrt(Math.pow(clientX - dragStart.current.x, 2) + Math.pow(clientY - dragStart.current.y, 2));
                 if (isDragging.current && dist < 5) {
-                    window.open('https://www.facebook.com/watch/?v=1771685040389127', '_blank');
+                    const audio = new Audio('./eem-ani.mp3');
+                    audio.play().catch(e => console.log("Audio play failed", e));
                 }
                 isDragging.current = false;
             };
@@ -436,6 +438,7 @@
             const [selectedPlayer, setSelectedPlayer] = useState(null);
             const [isDragging, setIsDragging] = useState(null); // {playerIndex, startPos}
             const [showSplash, setShowSplash] = useState(true);
+            const [isSharing, setIsSharing] = useState(false);
             const fieldRef = React.useRef(null);
 
 
@@ -600,6 +603,49 @@
                 touchDragItem.current = null;
             };
 
+            const captureSquad = async () => {
+                setIsSharing(true);
+                await new Promise(r => setTimeout(r, 100)); // Allow UI update
+
+                try {
+                    const canvas = await html2canvas(document.body, {
+                        useCORS: true,
+                        backgroundColor: '#0f172a',
+                        scale: 2,
+                        logging: false,
+                        ignoreElements: (element) => {
+                            return element.classList.contains('no-share');
+                        }
+                    });
+
+                    canvas.toBlob(async (blob) => {
+                        const file = new File([blob], "maccabi-tlv-squad.png", { type: "image/png" });
+
+                        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    files: [file],
+                                    title: 'My Maccabi TLV Squad',
+                                    text: 'Check out my lineup! #EemAnii'
+                                });
+                            } catch (error) {
+                                console.log('Share failed', error);
+                            }
+                        } else {
+                            const link = document.createElement('a');
+                            link.download = 'maccabi-tlv-squad.png';
+                            link.href = canvas.toDataURL();
+                            link.click();
+                        }
+                        setIsSharing(false);
+                    });
+                } catch (err) {
+                    console.error("Screenshot failed", err);
+                    alert("Could not create image. Please try again.");
+                    setIsSharing(false);
+                }
+            };
+
 
             // Handle dropping on empty field (Move player)
             const handleFieldTouchDrop = (clientX, clientY) => {
@@ -657,19 +703,27 @@
                                 }}>
                                 {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
                             </select>
-                            <button onClick={() => {
-                                const confirmed = confirm('Reset squad to default 2026 roster?');
-                                if (confirmed) {
-                                    setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
-                                        ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
-                                        left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
-                                    })));
-                                    setBench(FULL_SQUAD.slice(11));
-                                }
-                            }}
-                                className="bg-black/40 text-white text-[12px] px-4 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all uppercase tracking-wider">
-                                ↺ Reset
-                            </button>
+
+                            <div className="flex gap-2">
+                                <button onClick={captureSquad} disabled={isSharing}
+                                    className="bg-yellow-500 text-blue-900 text-[10px] px-3 py-1.5 rounded-full font-black outline-none border border-yellow-400 shadow-lg hover:bg-yellow-400 transition-all uppercase tracking-wider flex items-center gap-1 active:scale-95">
+                                    {isSharing ? '...' : 'Share'}
+                                </button>
+
+                                <button onClick={() => {
+                                    const confirmed = confirm('Reset squad to default 2026 roster?');
+                                    if (confirmed) {
+                                        setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
+                                            ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
+                                            left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
+                                        })));
+                                        setBench(FULL_SQUAD.slice(11));
+                                    }
+                                }}
+                                    className="bg-black/40 text-white text-[12px] px-3 py-2 rounded-full font-bold outline-none border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all uppercase tracking-wider no-share">
+                                    ↺ Reset
+                                </button>
+                            </div>
                         </div>
 
                         {/* App Title Overlay (since header is gone) */}

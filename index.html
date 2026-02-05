@@ -229,6 +229,25 @@
             z-index: 1000;
             pointer-events: none;
         }
+
+        /* Custom Scrollbar for Bench */
+        .bench-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .bench-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+        }
+
+        .bench-scroll::-webkit-scrollbar-thumb {
+            background: #eab308;
+            border-radius: 10px;
+        }
+
+        .bench-scroll::-webkit-scrollbar-thumb:hover {
+            background: #ca8a04;
+        }
     </style>
 </head>
 
@@ -558,27 +577,15 @@
 
             return (
                 <div className="flex flex-col h-screen w-full max-w-3xl mx-auto bg-slate-900 shadow-2xl relative overflow-hidden">
-                    <header className="p-4 bg-yellow-500 text-blue-900 flex justify-between items-center z-50">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest leading-none">Maccabi Tel Aviv</span>
-                            <h1 className="text-xl font-black italic tracking-tighter uppercase mt-1">EEM ANII</h1>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                            <button onClick={() => {
-                                const confirmed = confirm('Reset squad to default 2026 roster?');
-                                if (confirmed) {
-                                    setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
-                                        ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
-                                        left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
-                                    })));
-                                    setBench(FULL_SQUAD.slice(11));
-                                    alert('Squad refreshed!');
-                                }
-                            }}
-                                className="bg-blue-900 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none hover:bg-blue-800 transition-colors">
-                                ↻ Reset
-                            </button>
-                            <select className="bg-blue-900 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none"
+                    {/* Field Area */}
+                    <div ref={fieldRef}
+                        onDragOver={onDragOver}
+                        onDrop={onFieldDrop}
+                        className="relative flex-[7] pitch-pattern m-2 border-2 border-white overflow-hidden shadow-inner flex flex-col">
+
+                        {/* Floating Controls */}
+                        <div className="absolute top-2 right-2 z-[60] flex flex-col gap-2 items-end">
+                            <select className="bg-blue-900/90 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none border border-yellow-500/50 backdrop-blur-sm"
                                 value={formation} onChange={(e) => {
                                     const f = e.target.value;
                                     setFormation(f);
@@ -588,14 +595,26 @@
                                 }}>
                                 {Object.keys(FORMATIONS).map(f => <option key={f} value={f}>{f}</option>)}
                             </select>
+                            <button onClick={() => {
+                                const confirmed = confirm('Reset squad to default 2026 roster?');
+                                if (confirmed) {
+                                    setPlayers(FULL_SQUAD.slice(0, 11).map((p, i) => ({
+                                        ...p, top: formation !== "Custom" ? FORMATIONS[formation][i].t : p.top,
+                                        left: formation !== "Custom" ? FORMATIONS[formation][i].l : p.left
+                                    })));
+                                    setBench(FULL_SQUAD.slice(11));
+                                }
+                            }}
+                                className="bg-blue-900/90 text-white text-[10px] px-3 py-1.5 rounded-full font-bold outline-none border border-yellow-500/50 backdrop-blur-sm hover:bg-blue-800 transition-colors">
+                                ↻ Reset
+                            </button>
                         </div>
-                    </header>
 
-                    {/* Field Area */}
-                    <div ref={fieldRef}
-                        onDragOver={onDragOver}
-                        onDrop={onFieldDrop}
-                        className="relative flex-grow pitch-pattern m-2 border-2 border-white overflow-hidden shadow-inner">
+                        {/* App Title Overlay (since header is gone) */}
+                        <div className="absolute top-2 left-2 z-[50] pointer-events-none opacity-40">
+                            <span className="text-[8px] font-bold text-white uppercase tracking-widest leading-none block">Maccabi TLV</span>
+                            <h1 className="text-sm font-black italic tracking-tighter uppercase text-yellow-500">EEM ANII</h1>
+                        </div>
 
                         {/* Field Markings */}
                         <div className="field-line center-line"></div>
@@ -660,10 +679,10 @@
                         ))}
                     </div>
 
-                    {/* Bench Area - Optimized for Drops */}
-                    <div className="bg-slate-800 p-3 h-40 border-t border-slate-700">
-                        <h2 className="text-[10px] uppercase text-slate-400 font-bold mb-3">Bench (Drag Field Player here to replace)</h2>
-                        <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide">
+                    {/* Bench Area - Optimized for Mobile Visibility */}
+                    <div className="bg-slate-800 p-3 flex-[2] border-t border-slate-700 min-h-0 flex flex-col">
+                        <h2 className="text-[10px] uppercase text-slate-400 font-bold mb-2">Bench</h2>
+                        <div className="flex gap-4 overflow-x-auto pb-4 bench-scroll">
                             {bench.map((p, i) => (
                                 <div key={p.id}
                                     draggable

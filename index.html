@@ -685,7 +685,7 @@
             };
 
             return (
-                <div className="flex flex-col h-screen w-full max-w-3xl mx-auto bg-slate-900 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col h-[100dvh] w-full max-w-3xl mx-auto bg-slate-900 shadow-2xl relative overflow-hidden">
                     {/* Field Area */}
                     {/* Field Area - Takes all available space minus bench */}
                     <div ref={fieldRef}
@@ -814,7 +814,7 @@
 
                     {/* Bench Area - Optimized for Mobile Visibility */}
                     {/* Bench Area - Auto height based on content, safe bottom padding */}
-                    <div className="bg-slate-900/80 backdrop-blur-md px-2 pt-2 pb-8 border-t border-white/10 shrink-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
+                    <div className="bg-slate-900/80 backdrop-blur-md px-2 pt-2 pb-12 border-t border-white/10 shrink-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
                         <div className="flex gap-3 overflow-x-auto pb-2 bench-scroll items-center">
                             {bench.map((p, i) => (
                                 <div key={p.id}

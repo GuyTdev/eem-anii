@@ -687,10 +687,11 @@
             return (
                 <div className="flex flex-col h-screen w-full max-w-3xl mx-auto bg-slate-900 shadow-2xl relative overflow-hidden">
                     {/* Field Area */}
+                    {/* Field Area - Takes all available space minus bench */}
                     <div ref={fieldRef}
                         onDragOver={onDragOver}
                         onDrop={onFieldDrop}
-                        className="relative flex-[7] pitch-pattern m-2 border-2 border-white overflow-hidden shadow-inner flex flex-col">
+                        className="relative flex-1 m-1 border-2 border-white overflow-hidden shadow-inner flex flex-col pitch-pattern">
 
                         {/* Floating Controls - Glassmorphism */}
                         <div className="absolute top-2 right-2 z-[60] flex flex-col gap-2 items-end no-print">
@@ -812,8 +813,9 @@
                     </div>
 
                     {/* Bench Area - Optimized for Mobile Visibility */}
-                    <div className="bg-slate-900/80 backdrop-blur-md px-4 pt-4 pb-6 flex-[2] border-t border-white/10 min-h-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
-                        <div className="flex gap-4 overflow-x-auto pb-4 bench-scroll items-center h-full">
+                    {/* Bench Area - Auto height based on content, safe bottom padding */}
+                    <div className="bg-slate-900/80 backdrop-blur-md px-2 pt-2 pb-8 border-t border-white/10 shrink-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
+                        <div className="flex gap-3 overflow-x-auto pb-2 bench-scroll items-center">
                             {bench.map((p, i) => (
                                 <div key={p.id}
                                     draggable
@@ -828,7 +830,7 @@
                                     data-source="bench"
                                     style={{ touchAction: 'none' }}
                                     onClick={() => setSelectedPlayer(p)}
-                                    className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group
+                                    className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group w-20
                                         ${isDragging?.playerIndex === i && isDragging?.source === 'bench' ? 'opacity-50' : ''}
                                         ${isDragging && (isDragging.playerIndex !== i || isDragging.source !== 'bench') ? 'drop-target-active rounded-xl bg-slate-800/50' : ''}
                                     `}>
@@ -836,12 +838,12 @@
                                         {p.number}
                                         {captainId === p.id && <span className="absolute -top-1 -right-1 bg-yellow-500 text-blue-900 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-slate-800">C</span>}
                                     </div>
-                                    <p className="text-[11px] mt-2 text-slate-300 font-bold tracking-tight">{p.name}</p>
+                                    <p className="text-[11px] mt-2 text-slate-300 font-bold tracking-tight text-center leading-tight">{p.name}</p>
                                     <p className="text-[9px] text-slate-500 uppercase tracking-widest">{p.native}</p>
                                 </div>
                             ))}
                         </div>
-                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 z-0 pointer-events-none opacity-30">
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-0 pointer-events-none opacity-30">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.4em]">Substitutes</span>
                         </div>
                     </div>

@@ -830,16 +830,16 @@
                                     data-source="bench"
                                     style={{ touchAction: 'none' }}
                                     onClick={() => setSelectedPlayer(p)}
-                                    className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group w-20
+                                    className={`flex-shrink-0 flex flex-col items-center cursor-grab active:scale-95 transition-transform group w-16
                                         ${isDragging?.playerIndex === i && isDragging?.source === 'bench' ? 'opacity-50' : ''}
                                         ${isDragging && (isDragging.playerIndex !== i || isDragging.source !== 'bench') ? 'drop-target-active rounded-xl bg-slate-800/50' : ''}
                                     `}>
-                                    <div className="relative w-14 h-14 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-lg font-black shadow-lg group-hover:border-yellow-500 transition-colors">
+                                    <div className="relative w-11 h-11 bg-slate-800 rounded-full border-2 border-slate-600 flex items-center justify-center text-sm font-black shadow-lg group-hover:border-yellow-500 transition-colors">
                                         {p.number}
-                                        {captainId === p.id && <span className="absolute -top-1 -right-1 bg-yellow-500 text-blue-900 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-slate-800">C</span>}
+                                        {captainId === p.id && <span className="absolute -top-1 -right-1 bg-yellow-500 text-blue-900 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black border border-slate-800">C</span>}
                                     </div>
-                                    <p className="text-[11px] mt-2 text-slate-300 font-bold tracking-tight text-center leading-tight">{p.name}</p>
-                                    <p className="text-[9px] text-slate-500 uppercase tracking-widest">{p.native}</p>
+                                    <p className="text-[10px] mt-1.5 text-slate-300 font-bold tracking-tight text-center leading-tight">{p.name}</p>
+                                    <p className="text-[8px] text-slate-500 uppercase tracking-widest">{p.native}</p>
                                 </div>
                             ))}
                         </div>

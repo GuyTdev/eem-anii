@@ -430,7 +430,10 @@
             const [isDragging, setIsDragging] = useState(null); // {playerIndex, startPos}
             const [showSplash, setShowSplash] = useState(true);
             const [isCapturing, setIsCapturing] = useState(false);
+            const [canScrollLeft, setCanScrollLeft] = useState(false);
+            const [canScrollRight, setCanScrollRight] = useState(false);
             const fieldRef = React.useRef(null);
+            const benchRef = React.useRef(null);
 
 
             // Unified Drag & Drop Handler (Mouse & Touch)
@@ -594,6 +597,42 @@
                 touchDragItem.current = null;
             };
 
+
+            // Bench Scroll Functions
+            const checkBenchScroll = () => {
+                if (!benchRef.current) return;
+                const { scrollLeft, scrollWidth, clientWidth } = benchRef.current;
+                setCanScrollLeft(scrollLeft > 0);
+                setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+            };
+
+            const scrollBench = (direction) => {
+                if (!benchRef.current) return;
+                const scrollAmount = 200; // pixels
+                benchRef.current.scrollBy({
+                    left: direction === 'left' ? -scrollAmount : scrollAmount,
+                    behavior: 'smooth'
+                });
+            };
+
+            React.useEffect(() => {
+                checkBenchScroll();
+                const handleScroll = () => checkBenchScroll();
+                const handleResize = () => checkBenchScroll();
+
+                const benchEl = benchRef.current;
+                if (benchEl) {
+                    benchEl.addEventListener('scroll', handleScroll);
+                    window.addEventListener('resize', handleResize);
+                }
+
+                return () => {
+                    if (benchEl) {
+                        benchEl.removeEventListener('scroll', handleScroll);
+                    }
+                    window.removeEventListener('resize', handleResize);
+                };
+            }, [bench]); // Re-check when bench players change
 
             // Handle dropping on empty field (Move player)
             const captureField = async () => {
@@ -807,7 +846,31 @@
                     {/* Bench Area - Optimized for Mobile Visibility */}
                     {/* Bench Area - Auto height based on content, safe bottom padding */}
                     <div className="bg-slate-900/80 backdrop-blur-md px-2 pt-2 pb-12 border-t border-white/10 shrink-0 flex flex-col relative shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] z-40">
-                        <div className="flex gap-3 overflow-x-auto pb-2 bench-scroll items-center">
+                        {/* Left Scroll Arrow */}
+                        {canScrollLeft && (
+                            <button
+                                onClick={() => scrollBench('left')}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-yellow-500/90 hover:bg-yellow-400 text-slate-900 w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 border-2 border-slate-900"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                                    <path fillRule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        )}
+
+                        {/* Right Scroll Arrow */}
+                        {canScrollRight && (
+                            <button
+                                onClick={() => scrollBench('right')}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-yellow-500/90 hover:bg-yellow-400 text-slate-900 w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 border-2 border-slate-900"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                                    <path fillRule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        )}
+
+                        <div ref={benchRef} className="flex gap-3 overflow-x-auto pb-2 bench-scroll items-center">
                             {bench.map((p, i) => (
                                 <div key={p.id}
                                     draggable

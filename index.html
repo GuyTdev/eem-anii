@@ -223,6 +223,12 @@
             touch-action: none;
             z-index: 20;
             transition: transform 0.2s;
+            /* Responsive player sizing based on viewport */
+            --player-size: min(3rem, 7vmin);
+            --player-number-size: clamp(0.75rem, 1.5vmin, 0.875rem);
+            --player-badge-size: min(1.25rem, 2.5vmin);
+            --player-name-size: clamp(0.5rem, 1.2vmin, 0.625rem);
+            --player-position-size: clamp(0.4rem, 1vmin, 0.5rem);
         }
 
         .dragging {
@@ -808,15 +814,18 @@
                                 `}
                                 style={{ top: `${p.top}%`, left: `${p.left}%` }}>
 
-                                <div className={`relative w-12 h-12 rounded-full border-2 shadow-2xl flex items-center justify-center font-black text-sm
-                                    ${p.native === 'GK' ? 'bg-orange-600 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}>
+                                <div className={`relative rounded-full border-2 shadow-2xl flex items-center justify-center font-black
+                                    ${p.native === 'GK' ? 'bg-orange-600 border-white text-white' : 'bg-yellow-400 border-blue-900 text-blue-900'}`}
+                                    style={{ width: 'var(--player-size)', height: 'var(--player-size)', fontSize: 'var(--player-number-size)' }}>
                                     {p.number}
                                     {captainId === p.id && (
-                                        <span className="absolute -top-1 -right-1 bg-white text-blue-900 w-5 h-5 rounded-full border border-blue-900 flex items-center justify-center text-[8px] font-black">C</span>
+                                        <span className="absolute -top-1 -right-1 bg-white text-blue-900 rounded-full border border-blue-900 flex items-center justify-center text-[8px] font-black"
+                                            style={{ width: 'var(--player-badge-size)', height: 'var(--player-badge-size)' }}>C</span>
                                     )}
                                     {/* Status Icons */}
                                     {p.status === 'injured' && (
-                                        <span className="absolute -bottom-1 -right-1 bg-white w-5 h-5 rounded-full border border-red-500 flex items-center justify-center text-[10px] font-bold text-red-600" title="Injured">
+                                        <span className="absolute -bottom-1 -right-1 bg-white rounded-full border border-red-500 flex items-center justify-center text-[10px] font-bold text-red-600" title="Injured"
+                                            style={{ width: 'var(--player-badge-size)', height: 'var(--player-badge-size)' }}>
                                             ✚
                                         </span>
                                     )}
@@ -835,9 +844,10 @@
                                         <span className="absolute -bottom-1 -right-1 bg-yellow-400 w-4 h-5 rounded-sm border-2 border-orange-500 shadow-sm flex items-center justify-center text-[8px] text-white font-bold" title="Suspension Risk (4 Yellows)">!</span>
                                     )}
                                 </div>
-                                <div className="bg-blue-950/90 text-[10px] px-2 py-0.5 rounded-full mt-1.5 font-bold border border-white/20 uppercase tracking-tighter text-center flex flex-col">
+                                <div className="bg-blue-950/90 px-2 py-0.5 rounded-full mt-1.5 font-bold border border-white/20 uppercase tracking-tighter text-center flex flex-col"
+                                    style={{ fontSize: 'var(--player-name-size)' }}>
                                     <span>{p.name}</span>
-                                    <span className="text-[7px] text-yellow-500 opacity-80">{p.native}</span>
+                                    <span className="text-yellow-500 opacity-80" style={{ fontSize: 'var(--player-position-size)' }}>{p.native}</span>
                                 </div>
                             </div>
                         ))}
@@ -870,7 +880,7 @@
                             </button>
                         )}
 
-                        <div ref={benchRef} className="flex gap-3 overflow-x-auto pb-2 bench-scroll items-center">
+                        <div ref={benchRef} className="flex gap-3 overflow-x-auto pb-5 bench-scroll items-center">
                             {bench.map((p, i) => (
                                 <div key={p.id}
                                     draggable

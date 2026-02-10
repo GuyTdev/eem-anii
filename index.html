@@ -426,9 +426,9 @@
         };
 
         function App() {
-            const [formation, setFormation] = useState("4-3-3");
+            const [formation, setFormation] = useState("4-1-2-3");
             const [players, setPlayers] = useState(FULL_SQUAD.slice(0, 11).map((p, i) => ({
-                ...p, top: FORMATIONS["4-3-3"][i].t, left: FORMATIONS["4-3-3"][i].l
+                ...p, top: FORMATIONS["4-1-2-3"][i].t, left: FORMATIONS["4-1-2-3"][i].l
             })));
             const [bench, setBench] = useState(FULL_SQUAD.slice(11));
             const [captainId, setCaptainId] = useState(42);

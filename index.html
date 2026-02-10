@@ -316,38 +316,38 @@
         const { useState } = React;
         // FULL 2026 SQUAD DATA - Ligat Ha'Al 2025-26 season stats only
         const FULL_SQUAD = [
-            // Starting 11 (vs Kiryat Shmona 02/02/2026) - Confirmed - Fixed Sides
-            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 11, cs: 6, strength: "Reflexes 82" },
+            // Starting 11 (Latest Match - 4-1-2-3 Formation)
+            { id: 22, name: "Melika", number: 22, pos: "GK", native: "GK", mp: 12, cs: 6, strength: "Reflexes 82" },
 
-            { id: 3, name: "Revivo", number: 3, pos: "DF", native: "LB", mp: 16, g: 0, a: 4, strength: "Crossing 85" },
-            { id: 6, name: "Asante", number: 6, pos: "DF", native: "CB", mp: 17, g: 1, a: 1, strength: "Strength 84" },
-            { id: 4, name: "Heitor", number: 4, pos: "DF", native: "CB", mp: 14, g: 1, a: 0, status: 'suspended-yellow', strength: "Aerial Duels 83" },
-            { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 12, g: 1, a: 0, strength: "Defensive Positioning 80" },
+            { id: 3, name: "Revivo", number: 3, pos: "DF", native: "LB", mp: 17, g: 1, a: 5, strength: "Crossing 85" },
+            { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 13, g: 0, a: 1, strength: "Marking 82" },
+            { id: 6, name: "Asante", number: 6, pos: "DF", native: "CB", mp: 18, g: 1, a: 1, strength: "Strength 84" },
+            { id: 21, name: "Ben Harush", number: 21, pos: "DF", native: "RB", mp: 13, g: 1, a: 0, strength: "Defensive Positioning 80" },
 
-            { id: 42, name: "Dor Peretz", number: 42, pos: "MF", native: "CM", mp: 17, g: 10, a: 1, strength: "Late Runs Into Box 88" },
-            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CAM", mp: 18, g: 2, a: 2, strength: "Vision 82" },
-            { id: 10, name: "Andrade", number: 10, pos: "MF", native: "CAM", mp: 17, g: 2, a: 1, strength: "Dribbling 84" },
+            { id: 30, name: "Itamar Noy", number: 30, pos: "MF", native: "CDM", mp: 19, g: 2, a: 2, strength: "Vision 82" },
+            { id: 42, name: "Dor Peretz", number: 42, pos: "MF", native: "CAM", mp: 18, g: 10, a: 1, strength: "Late Runs Into Box 88" },
+            { id: 36, name: "Ido Shahar", number: 36, pos: "MF", native: "CAM", mp: 17, g: 9, a: 2, strength: "Long Shots 87" },
 
-            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 17, g: 0, a: 3, strength: "Acceleration 86" },
-            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 17, g: 3, a: 1, strength: "Finishing 81" },
-            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 18, g: 2, a: 2, strength: "Pace 89" },
+            { id: 29, name: "Varela", number: 29, pos: "FW", native: "LW", mp: 18, g: 0, a: 3, strength: "Acceleration 86" },
+            { id: 70, name: "Sahiti", number: 70, pos: "FW", native: "RW", mp: 2, g: 1, a: 0, strength: "Work Rate 82" },
+            { id: 34, name: "Abu Farchi", number: 34, pos: "FW", native: "ST", mp: 18, g: 4, a: 3, strength: "Finishing 81" },
 
             // Bench / Full Squad
             { id: 90, name: "Mishpati", number: 90, pos: "GK", native: "GK", mp: 8, cs: 3, strength: "Handling 79" },
-            { id: 28, name: "Sissokho", number: 28, pos: "MF", native: "CDM", mp: 13, g: 0, a: 1, status: 'yellow-risk', strength: "Interceptions 84" },
-            { id: 36, name: "Ido Shahar", number: 36, pos: "MF", native: "CM", mp: 16, g: 9, a: 2, strength: "Long Shots 87" },
-            { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 19, g: 3, a: 4, status: 'yellow-risk', strength: "Creativity 85" },
-            { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 16, g: 3, a: 1, strength: "Off‑Ball Movement 82" },
+            { id: 4, name: "Heitor", number: 4, pos: "DF", native: "CB", mp: 14, g: 1, a: 0, status: 'yellow-risk', strength: "Aerial Duels 83" },
             { id: 41, name: "Ben Hamo", number: 41, pos: "DF", native: "CB", mp: 6, g: 0, a: 0, strength: "Tackling 80" },
             { id: 5, name: "Camara", number: 5, pos: "DF", native: "CB", mp: 14, g: 1, a: 0, status: 'yellow-risk', strength: "Aggression 83" },
-            { id: 13, name: "Shlomo", number: 13, pos: "DF", native: "CB", mp: 12, g: 0, a: 1, strength: "Marking 82" },
             { id: 14, name: "Gropper", number: 14, pos: "DF", native: "LB", mp: 2, g: 0, a: 0, status: 'injured', strength: "Stamina 81" },
-            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 8, g: 0, a: 1, status: 'injured', strength: "Ball Winning 83" },
+            { id: 28, name: "Sissokho", number: 28, pos: "MF", native: "CDM", mp: 14, g: 0, a: 1, status: 'yellow-risk', strength: "Interceptions 84" },
+            { id: 17, name: "Belic", number: 17, pos: "MF", native: "CDM", mp: 9, g: 0, a: 1, strength: "Ball Winning 83" },
             { id: 23, name: "Lederman", number: 23, pos: "MF", native: "CDM", mp: 6, g: 0, a: 0, strength: "Short Passing 80" },
+            { id: 10, name: "Andrade", number: 10, pos: "MF", native: "CAM", mp: 17, g: 2, a: 1, strength: "Dribbling 84" },
+            { id: 11, name: "Jehezkel", number: 11, pos: "FW", native: "RW", mp: 20, g: 3, a: 4, status: 'yellow-risk', strength: "Creativity 85" },
+            { id: 77, name: "Davida", number: 77, pos: "FW", native: "RW", mp: 19, g: 2, a: 2, strength: "Pace 89" },
             { id: 98, name: "Nicolaescu", number: 98, pos: "FW", native: "ST", mp: 9, g: 2, a: 1, status: 'injured', strength: "Finishing 84" },
-            { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 2, g: 0, a: 0, strength: "Pace 84" },
+            { id: 19, name: "Madmon", number: 19, pos: "FW", native: "ST", mp: 16, g: 3, a: 1, strength: "Off‑Ball Movement 82" },
+            { id: 15, name: "Malede", number: 15, pos: "FW", native: "ST", mp: 3, g: 1, a: 0, strength: "Pace 84" },
             { id: 60, name: "Ben Simon", number: 60, pos: "FW", native: "ST", mp: 3, g: 0, a: 0, strength: "Heading 78" },
-            { id: 70, name: "Sahiti", number: 70, pos: "MF", native: "RM", mp: 1, g: 0, a: 0, strength: "Work Rate 82" },
             { id: 27, name: "Magor", number: 27, pos: "FW", native: "LW", mp: 0, g: 0, a: 0, strength: "Dribbling 80" }
         ];
 
@@ -356,6 +356,7 @@
         const FORMATIONS = {
             "4-2-3-1": [{ t: 88, l: 50 }, { t: 72, l: 85 }, { t: 75, l: 63 }, { t: 75, l: 37 }, { t: 72, l: 15 }, { t: 55, l: 65 }, { t: 55, l: 35 }, { t: 30, l: 82 }, { t: 25, l: 50 }, { t: 30, l: 18 }, { t: 12, l: 50 }],
             "4-3-3": [{ t: 88, l: 50 }, { t: 72, l: 15 }, { t: 75, l: 38 }, { t: 75, l: 62 }, { t: 72, l: 85 }, { t: 55, l: 50 }, { t: 42, l: 30 }, { t: 42, l: 70 }, { t: 20, l: 18 }, { t: 15, l: 50 }, { t: 20, l: 82 }],
+            "4-1-2-3": [{ t: 88, l: 50 }, { t: 72, l: 15 }, { t: 75, l: 38 }, { t: 75, l: 62 }, { t: 72, l: 85 }, { t: 58, l: 50 }, { t: 42, l: 30 }, { t: 42, l: 70 }, { t: 20, l: 18 }, { t: 20, l: 82 }, { t: 15, l: 50 }],
             "3-5-2": [{ t: 88, l: 50 }, { t: 75, l: 25 }, { t: 78, l: 50 }, { t: 75, l: 75 }, { t: 52, l: 10 }, { t: 55, l: 32 }, { t: 55, l: 50 }, { t: 55, l: 68 }, { t: 52, l: 90 }, { t: 18, l: 35 }, { t: 18, l: 65 }],
             "4-4-2": [{ t: 88, l: 50 }, { t: 72, l: 15 }, { t: 75, l: 38 }, { t: 75, l: 62 }, { t: 72, l: 85 }, { t: 50, l: 15 }, { t: 52, l: 40 }, { t: 52, l: 60 }, { t: 50, l: 85 }, { t: 18, l: 35 }, { t: 18, l: 65 }],
             "5-4-1": [{ t: 88, l: 50 }, { t: 75, l: 10 }, { t: 78, l: 30 }, { t: 80, l: 50 }, { t: 78, l: 70 }, { t: 75, l: 90 }, { t: 52, l: 20 }, { t: 55, l: 40 }, { t: 55, l: 60 }, { t: 52, l: 80 }, { t: 22, l: 50 }],

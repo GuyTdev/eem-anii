@@ -364,17 +364,44 @@
         };
 
         const encodeSquadState = (formation, players, bench, captainId) => {
-            const data = {
-                f: formation,
-                c: captainId,
-                p: players.map(p => ({ id: p.id, t: Math.round(p.top * 10) / 10, l: Math.round(p.left * 10) / 10 })),
-                b: bench.map(p => p.id)
-            };
-            return btoa(JSON.stringify(data));
+            const fKeys = Object.keys(FORMATIONS);
+            const fIndex = fKeys.indexOf(formation).toString(36);
+            const cId = captainId.toString(36);
+
+            const pData = players.map(p => {
+                const t = Math.round(p.top * 10).toString(36);
+                const l = Math.round(p.left * 10).toString(36);
+                return `${p.id.toString(36)}.${t}.${l}`;
+            }).join('-');
+
+            const bData = bench.map(p => p.id.toString(36)).join('-');
+
+            return `v2_${fIndex}_${cId}_${pData}_${bData}`;
         };
 
         const decodeSquadState = (encoded) => {
             try {
+                if (encoded.startsWith('v2_')) {
+                    const [, fIdx, cId, pStr, bStr] = encoded.split('_');
+                    const fKeys = Object.keys(FORMATIONS);
+
+                    const players = pStr.split('-').map(ps => {
+                        const [id, t, l] = ps.split('.');
+                        const fsp = FULL_SQUAD.find(p => p.id === parseInt(id, 36));
+                        if (!fsp) return null;
+                        return { ...fsp, top: parseInt(t, 36) / 10, left: parseInt(l, 36) / 10 };
+                    }).filter(Boolean);
+
+                    const bench = bStr ? bStr.split('-').map(id => FULL_SQUAD.find(p => p.id === parseInt(id, 36))).filter(Boolean) : [];
+
+                    return {
+                        formation: fKeys[parseInt(fIdx, 36)] || "4-1-2-3",
+                        players,
+                        bench,
+                        captainId: parseInt(cId, 36)
+                    };
+                }
+                // Fallback for old Base64 JSON format
                 return JSON.parse(atob(encoded));
             } catch (e) {
                 console.error("Failed to decode squad state:", e);
@@ -449,21 +476,7 @@
                 const hash = window.location.hash.substring(1);
                 if (hash.includes('squad=')) {
                     const encoded = hash.split('squad=')[1].split('&')[0];
-                    const decoded = decodeSquadState(encoded);
-                    if (decoded) {
-                        const players = decoded.p.map(sp => {
-                            const p = FULL_SQUAD.find(fsp => fsp.id === sp.id);
-                            return p ? { ...p, top: sp.t, left: sp.l } : null;
-                        }).filter(Boolean);
-                        const bench = (decoded.b || []).map(id => FULL_SQUAD.find(fsp => fsp.id === id)).filter(Boolean);
-
-                        // Fallback bench if decoded bench is empty and total players is less than FULL_SQUAD
-                        const finalBench = bench.length > 0 ? bench : FULL_SQUAD.filter(p => !players.find(fp => fp.id === p.id));
-
-                        if (players.length === 11) {
-                            return { formation: decoded.f, players, bench: finalBench, captainId: decoded.c };
-                        }
-                    }
+                    return decodeSquadState(encoded);
                 }
                 return null;
             }, []);
@@ -710,10 +723,11 @@
 
                         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                             try {
+                                // Including shareUrl in the text ensures it shows up in WhatsApp caption
                                 await navigator.share({
                                     files: [file],
                                     title: 'Maccabi TLV Lineup',
-                                    text: 'Check out my Maccabi TLV game plan! 💛💙',
+                                    text: `Check out my Maccabi TLV game plan! 💛💙\n\n${shareUrl}`,
                                     url: shareUrl
                                 });
                             } catch (error) {
@@ -725,13 +739,13 @@
                             link.href = canvas.toDataURL();
                             link.click();
 
-                            // Fallback: Copy link to clipboard
+                            // Fallback: Copy link to clipboard with clear UI
                             try {
                                 await navigator.clipboard.writeText(shareUrl);
-                                alert("Image downloaded and shareable link copied to clipboard!");
+                                alert("Success! 🏆\n1. Image downloaded\n2. Shareable link copied to clipboard");
                             } catch (err) {
                                 console.log("Clipboard failed", err);
-                                alert("Image downloaded! (Could not copy share link)");
+                                alert("Image downloaded!");
                             }
                         }
                         setIsCapturing(false);
